@@ -1,15 +1,15 @@
 import { AbstractConnector } from "@web3-react/abstract-connector";
 import { BaseDrawer, useDrawer } from "./Drawer";
 import { Divider, Space, Typography, notification } from "antd";
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fade } from "components/animations";
 import { OVERLAY_READY, fortmatic } from "ethereum";
 import { UnsupportedChainIdError, useWeb3React } from "@web3-react/core";
 import { WalletConnectConnector } from "@web3-react/walletconnect-connector";
 import { actions } from "features";
 import { ethers } from "ethers";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { usePrevious, useWalletOptions } from "hooks";
-import { useTranslator } from "hooks";
+import { usePrevious, useTranslator, useWalletOptions } from "hooks";
 import noop from "lodash.noop";
 
 export function useWalletConnectionDrawer() {
@@ -68,19 +68,24 @@ export function WalletConnectionDrawer() {
             const _account = await connector.getAccount();
             const _provider = await connector.getProvider();
             const provider = new ethers.providers.Web3Provider(_provider, 1);
+            const networkId = parseInt(await provider.send("net_version", []));
 
-            dispatch(
-              actions.initialize({
-                provider,
-                withSigner: true,
-                selectedAddress: account ?? _account ?? "",
-              })
-            );
+            if (networkId === 1) {
+              dispatch(
+                actions.initialize({
+                  provider,
+                  withSigner: true,
+                  selectedAddress: account ?? _account ?? "",
+                })
+              );
 
-            notification.success({
-              message: tx("CONNECTED"),
-              description: tx("YOU_HAVE_SUCCESSFULLY_CONNECTED_YOUR_WALLET"),
-            });
+              notification.success({
+                message: tx("CONNECTED"),
+                description: tx("YOU_HAVE_SUCCESSFULLY_CONNECTED_YOUR_WALLET"),
+              });
+            } else {
+              dispatch(actions.connectedToBadNetwork());
+            }
           })
           .catch((error) => {
             if (error instanceof UnsupportedChainIdError) {
@@ -101,6 +106,15 @@ export function WalletConnectionDrawer() {
     },
     [dispatch, activate, tx, attemptingActivation, account]
   );
+  const [fadedOption, setFadedOption] = useState(-1);
+
+  useEffect(() => {
+    if (fadedOption < walletOptions.length - 1) {
+      setTimeout(() => {
+        setFadedOption((prev) => prev + 1);
+      }, 200);
+    }
+  }, [fadedOption, walletOptions]);
 
   return (
     <BaseDrawer title={tx("CONNECT_YOUR_WALLET")} onClose={close}>
@@ -112,7 +126,7 @@ export function WalletConnectionDrawer() {
         }}
       >
         {walletOptions.map((option, index, array) => (
-          <Fragment key={option.name}>
+          <Fade key={option.name} in={fadedOption >= index}>
             <div
               onClick={() => attemptActivation(option.connector)}
               className="wallet-option"
@@ -144,7 +158,7 @@ export function WalletConnectionDrawer() {
               </div>
             </div>
             {index !== array.length - 1 && <Divider />}
-          </Fragment>
+          </Fade>
         ))}
       </Space>
     </BaseDrawer>

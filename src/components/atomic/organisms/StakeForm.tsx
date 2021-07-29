@@ -6,8 +6,10 @@ import {
   NewStakingPool,
 } from "features";
 import { Formik, useFormikContext } from "formik";
-import { Page, StakingStats, TokenSelector } from "components/atomic/organisms";
+import { Page } from "./Page";
 import { ReactNode, useMemo } from "react";
+import { StakingStats } from "./StakeStats";
+import { TokenSelector } from "./TokenSelector";
 import { convert } from "helpers";
 import { useBreakpoints, useTokenApproval, useTokenBalance } from "hooks";
 
@@ -15,6 +17,7 @@ export function StakeForm({
   stakingPool,
   portfolioToken,
   rewardsPerDay,
+  rewardsAsset,
   decimals,
   spender,
   onStake,
@@ -28,6 +31,7 @@ export function StakeForm({
   stakingPool: NewStakingPool | MasterChefPool;
   portfolioToken: FormattedPortfolioAsset;
   rewardsPerDay: string;
+  rewardsAsset: string;
   decimals: number;
   spender: string;
   onStake(amount: string): void;
@@ -96,6 +100,7 @@ export function StakeForm({
               stakingPoolLink={stakingTokenLink}
               decimals={decimals}
               rewardsPerDay={rewardsPerDay}
+              rewardsAsset={rewardsAsset}
             />
           </Col>
         </Row>

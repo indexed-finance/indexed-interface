@@ -74,10 +74,7 @@ function SingleTokenMintInteraction({ indexPool }: Props) {
           return;
         }
 
-        const output = calculateAmountOut(
-          fromToken,
-          convert.toToken(fromAmount.exact, 18)
-        );
+        const output = calculateAmountOut(fromToken, fromAmount.exact);
 
         if (output) {
           if (output.error) {
@@ -302,15 +299,14 @@ function UniswapMintInteraction({ indexPool }: Props) {
 
 function MultiTokenMintInteraction({ indexPool }: Props) {
   const { executeMint } = useMultiTokenMintCallbacks(indexPool.id);
-
-  const tokenIds = usePoolTokenAddresses(indexPool.id);
-  useBalanceAndApprovalRegistrar(indexPool.id, tokenIds);
-
   const handleSubmit = useCallback(
     (values: MultiInteractionValues) =>
       executeMint(values.fromAmount.displayed),
     [executeMint]
   );
+  const tokenIds = usePoolTokenAddresses(indexPool.id);
+
+  useBalanceAndApprovalRegistrar(indexPool.id, tokenIds);
 
   return (
     <MultiInteraction
