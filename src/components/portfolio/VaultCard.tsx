@@ -16,7 +16,7 @@ interface Props {
 export function VVaultCard({ address }: Props) {
   const { isMobile } = useBreakpoints();
   const vault = useVault(address);
-  const { wrappedBalance, usdValue } = useVaultUserBalance(address);
+  const { wrappedBalance, usdValue, earnedInterest } = useVaultUserBalance(address);
   const apr = useVaultAPR(address);
   const symbol = vault?.symbol ?? "";
   const name = vault?.name ?? "";
@@ -43,7 +43,7 @@ export function VVaultCard({ address }: Props) {
               {apr}%
             </List.Item>
             <List.Item>
-              <Label>Earned</Label>${usdValue}
+              <Label>Earned</Label>{shortenAmount(earnedInterest)} {vault?.symbol}
             </List.Item>
           </List>,
         ]}
@@ -60,7 +60,7 @@ function toFixed(num: number, fixed: number) {
 }
 
 function shortenAmount(amount: string) {
-  let shortenedAmount: string | number = +toFixed(parseFloat(amount), 3);
+  let shortenedAmount: string | number = +toFixed(parseFloat(amount), 5);
   if (shortenedAmount !== parseFloat(amount)) {
     shortenedAmount = `${shortenedAmount}…`;
   }
