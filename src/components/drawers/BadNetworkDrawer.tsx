@@ -17,7 +17,7 @@ export function BadNetworkDrawer() {
   const { deactivate } = useWeb3React();
   const handleDisconnect = useCallback(() => {
     deactivate();
-    dispatch(actions.userDisconnected());
+    dispatch(actions.userDisconnected(null));
 
     notification.info({
       message: tx("DISCONNECTED"),
