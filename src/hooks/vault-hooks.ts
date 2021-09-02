@@ -124,7 +124,11 @@ export function useAllVaultsUserBalance(): Record<string, VaultBalanceEntries> {
           true,
           2
         );
-
+        const formattedBalance = convert.toBalanceNumber(wrappedBalance, vault.decimals);
+        const currentPrice = convert.toBalanceNumber(vault.price ?? "0", 18, 10)
+        const currentValue = formattedBalance * currentPrice;
+        const paidValue = formattedBalance * (vault.averagePricePerShare ?? 0);
+        const earnedInterest = (currentValue - paidValue).toString();
         return {
           id: vaultId,
           balance: {
@@ -155,6 +159,7 @@ export function useAllVaultsUserBalance(): Record<string, VaultBalanceEntries> {
             ),
           },
           usdValue,
+          earnedInterest
         };
       } else {
         return null;
@@ -359,4 +364,5 @@ type VaultBalanceEntries = {
   wrappedBalance: BalanceEntry;
   unwrappedBalance: BalanceEntry;
   usdValue: string;
+  earnedInterest: string;
 };
