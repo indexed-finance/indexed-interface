@@ -8,6 +8,7 @@ import { createEntityAdapter, createSlice } from "@reduxjs/toolkit";
 import { fetchMulticallData } from "../batcher/requests"; // Circular dependency.
 import { fetchVaultsData } from "../requests";
 import { mirroredServerState, restartedDueToError } from "../actions";
+import { userDisconnected } from "features/user/actions";
 import type { AppState } from "../store";
 
 export type NormalizedTokenAdapter = TokenAdapter & {
@@ -51,6 +52,14 @@ const slice = createSlice({
   reducers: {},
   extraReducers: (builder) =>
     builder
+      .addCase(userDisconnected, (state) => {
+        for (const id of state.ids) {
+          const entity = state.entities[id]
+          if (entity) {
+            entity.averagePricePerShare = undefined
+          }
+        }
+      })
       .addCase(fetchMulticallData.fulfilled, (state, action) => {
         const relevantMulticallData = vaultsMulticallDataParser(action.payload);
 
