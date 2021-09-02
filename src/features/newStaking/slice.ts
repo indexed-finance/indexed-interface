@@ -5,6 +5,7 @@ import { createEntityAdapter, createSlice } from "@reduxjs/toolkit";
 import { fetchMulticallData } from "../batcher/requests";
 import { fetchNewStakingData } from "./requests";
 import { mirroredServerState, restartedDueToError } from "../actions";
+import { userDisconnected } from "features/user/actions";
 import type { AppState } from "../store";
 import type { CallWithResult } from "helpers";
 
@@ -33,6 +34,15 @@ const slice = createSlice({
   reducers: {},
   extraReducers: (builder) =>
     builder
+      .addCase(userDisconnected, (state) => {
+        for (const id of state.ids) {
+          const entity = state.entities[id]
+          if (entity) {
+            entity.userEarnedRewards = undefined
+            entity.userStakedBalance = undefined
+          }
+        }
+      })
       .addCase(fetchNewStakingData.fulfilled, (state, action) => {
         if (action.payload) {
           adapter.addMany(state, action.payload.pools);

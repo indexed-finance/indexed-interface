@@ -20,7 +20,7 @@ export function JazzIcon({ address, isWalletIcon = false }: Props) {
   const blockie = useRef<null | HTMLSpanElement>(null);
   const handleDisconnect = useCallback(() => {
     deactivate();
-    dispatch(actions.userDisconnected());
+    dispatch(actions.userDisconnected(null));
 
     notification.info({
       message: tx("DISCONNECTED"),

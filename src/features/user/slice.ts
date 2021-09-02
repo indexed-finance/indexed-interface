@@ -6,6 +6,7 @@ import { fetchMulticallData } from "../batcher/requests";
 import { stakingMulticallDataParser } from "../staking";
 import { tokensSelectors } from "../tokens";
 import { transactionFinalized } from "../transactions/actions";
+import { userDisconnected } from "./actions"
 import type { AppState } from "../store";
 import type { NormalizedUser } from "./types";
 
@@ -27,15 +28,15 @@ const slice = createSlice({
     userAddressSelected(state, action: PayloadAction<string>) {
       state.address = action.payload;
     },
-    userDisconnected() {
-      return initialState;
-    },
     walletConnected(state) {
       state.connected = true;
     },
   },
   extraReducers: (builder) =>
     builder
+      .addCase(userDisconnected, (state) => {
+        return initialState
+      })
       .addCase(fetchMulticallData.fulfilled, (state, action) => {
         const userData = userMulticallDataParser(action.payload);
         const stakingData = stakingMulticallDataParser(action.payload);
@@ -76,7 +77,13 @@ const slice = createSlice({
       }),
 });
 
-export const { actions: userActions, reducer: userReducer } = slice;
+const { actions, reducer: userReducer } = slice;
+
+export { userReducer }
+export const userActions = {
+  ...actions,
+  userDisconnected
+}
 
 export const userSelectors = {
   selectUser(state: AppState) {
