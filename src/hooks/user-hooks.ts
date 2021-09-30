@@ -1,9 +1,9 @@
-import { ETH_BALANCE_GETTER, NDX_ADDRESS } from "config";
 import { RegisteredCall } from "helpers";
 import { constants } from "ethers";
 import { selectors } from "features";
 import { useCallRegistrar } from "./use-call-registrar";
 import { useMemo } from "react";
+import { useNetworkAddresses } from "./contract-hooks";
 import { useSelector } from "react-redux";
 import type { AppState } from "features/store";
 
@@ -43,15 +43,16 @@ export const USER_CALLER = "User";
 
 function buildBalanceCalls(
   userAddress: string,
-  tokens: string[]
+  tokens: string[],
+  ethBalanceGetter: string
 ): RegisteredCall[] {
   const interfaceKind = "IERC20";
   return tokens.map((tokenId) => ({
     interfaceKind,
-    target: tokenId === constants.AddressZero ? ETH_BALANCE_GETTER : tokenId,
+    target: tokenId === constants.AddressZero ? ethBalanceGetter : tokenId,
     function: "balanceOf",
     args: [userAddress],
-  }))
+  }));
 }
 
 function buildAllowanceCalls(
@@ -60,26 +61,31 @@ function buildAllowanceCalls(
   tokens: string[]
 ): RegisteredCall[] {
   const interfaceKind = "IERC20";
-  return tokens.filter(t => t !== constants.AddressZero).map((tokenId) => ({
-    interfaceKind,
-    target: tokenId,
-    function: "allowance",
-    args: [userAddress, spender],
-  }))
+  return tokens
+    .filter((t) => t !== constants.AddressZero)
+    .map((tokenId) => ({
+      interfaceKind,
+      target: tokenId,
+      function: "allowance",
+      args: [userAddress, spender],
+    }));
 }
 
 export function useBalanceAndApprovalRegistrar(
   spender: string,
   _tokens: string | string[]
 ) {
+  const { ndx, ethBalanceGetter } = useNetworkAddresses();
   const userAddress = useUserAddress();
   const userDataCalls: RegisteredCall[] = useMemo(() => {
     const tokens = Array.isArray(_tokens) ? _tokens : [_tokens];
-    return userAddress ? [
-      ...buildBalanceCalls(userAddress, [...tokens, NDX_ADDRESS]),
-      ...buildAllowanceCalls(userAddress, spender, tokens)
-    ] : []
-  }, [userAddress, spender, _tokens]);
+    return userAddress
+      ? [
+          ...buildBalanceCalls(userAddress, [...tokens, ndx], ethBalanceGetter),
+          ...buildAllowanceCalls(userAddress, spender, tokens),
+        ]
+      : [];
+  }, [userAddress, spender, _tokens, ethBalanceGetter, ndx]);
 
   useCallRegistrar({
     caller: USER_CALLER,
@@ -88,11 +94,13 @@ export function useBalanceAndApprovalRegistrar(
 }
 
 export function useBalancesRegistrar(tokenIds: string[]) {
+  const { ethBalanceGetter } = useNetworkAddresses();
   const userAddress = useUserAddress();
   const userDataCalls: RegisteredCall[] = useMemo(() => {
     return userAddress
-      ? buildBalanceCalls(userAddress, tokenIds) : [];
-  }, [userAddress, tokenIds]);
+      ? buildBalanceCalls(userAddress, tokenIds, ethBalanceGetter)
+      : [];
+  }, [userAddress, tokenIds, ethBalanceGetter]);
 
   useCallRegistrar({
     caller: USER_CALLER,
@@ -104,16 +112,22 @@ export function useBalancesAndApprovalsRegistrar(
   spenders: string[],
   tokens: string[]
 ) {
+  const { ethBalanceGetter } = useNetworkAddresses();
   const userAddress = useUserAddress();
   const userDataCalls: RegisteredCall[] = useMemo(() => {
-    return userAddress ? [
-      ...buildBalanceCalls(userAddress, tokens),
-      ...tokens.reduce((arr, token, i) => ([
-        ...arr,
-        ...buildAllowanceCalls(userAddress, spenders[i], [token])
-      ]), [] as RegisteredCall[])
-    ] : []
-  }, [userAddress, spenders, tokens]);
+    return userAddress
+      ? [
+          ...buildBalanceCalls(userAddress, tokens, ethBalanceGetter),
+          ...tokens.reduce(
+            (arr, token, i) => [
+              ...arr,
+              ...buildAllowanceCalls(userAddress, spenders[i], [token]),
+            ],
+            [] as RegisteredCall[]
+          ),
+        ]
+      : [];
+  }, [userAddress, spenders, tokens, ethBalanceGetter]);
 
   useCallRegistrar({
     caller: USER_CALLER,

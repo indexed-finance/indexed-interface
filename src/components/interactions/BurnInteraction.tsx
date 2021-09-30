@@ -1,8 +1,3 @@
-import {
-  DISPLAYED_COMMON_BASE_TOKENS,
-  NARWHAL_ROUTER_ADDRESS,
-  SLIPPAGE_RATE,
-} from "config";
 import { FormattedIndexPool, selectors } from "features";
 import {
   MultiInteraction,
@@ -10,6 +5,7 @@ import {
   SingleInteraction,
   SingleInteractionValues,
 } from "./BaseInteraction";
+import { SLIPPAGE_RATE } from "config";
 import { convert } from "helpers";
 import { downwardSlippage, upwardSlippage } from "ethereum";
 import {
@@ -17,6 +13,7 @@ import {
   useBalancesRegistrar,
   useBurnRouterCallbacks,
   useMultiTokenBurnCallbacks,
+  useNetworkAddresses,
   useSingleTokenBurnCallbacks,
 } from "hooks";
 import { useCallback } from "react";
@@ -184,6 +181,10 @@ function MultiTokenBurnInteraction({ indexPool }: Props) {
 }
 
 function UniswapBurnInteraction({ indexPool }: Props) {
+  const displayedCommonBaseTokens = useSelector(
+    selectors.selectDisplayedCommonBaseTokens
+  );
+  const { narwhalRouter } = useNetworkAddresses();
   const poolId = indexPool.id;
   const tokenLookup = useSelector(selectors.selectTokenLookupBySymbol);
   const {
@@ -193,13 +194,11 @@ function UniswapBurnInteraction({ indexPool }: Props) {
   } = useBurnRouterCallbacks(poolId);
 
   const assets = [
-    ...DISPLAYED_COMMON_BASE_TOKENS,
+    ...displayedCommonBaseTokens,
     { id: indexPool.id, name: indexPool.name, symbol: indexPool.symbol },
   ];
 
-  useBalanceAndApprovalRegistrar(NARWHAL_ROUTER_ADDRESS.toLowerCase(), [
-    poolId,
-  ]);
+  useBalanceAndApprovalRegistrar(narwhalRouter.toLowerCase(), [poolId]);
 
   const handleChange = useCallback(
     (values: SingleInteractionValues) => {
@@ -305,7 +304,7 @@ function UniswapBurnInteraction({ indexPool }: Props) {
           id: string;
         }[]
       }
-      spender={NARWHAL_ROUTER_ADDRESS.toLowerCase()}
+      spender={narwhalRouter.toLowerCase()}
       onSubmit={handleSubmit}
       onChange={handleChange}
       defaultInputSymbol={indexPool.symbol}

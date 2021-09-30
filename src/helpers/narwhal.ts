@@ -7,10 +7,9 @@ import {
   Trade,
 } from "@indexed-finance/narwhal-sdk";
 import { BigNumber } from "bignumber.js";
-import { COMMON_BASE_TOKENS, SUSHISWAP_FACTORY_ADDRESS, UNISWAP_FACTORY_ADDRESS } from "config";
 import { constants, BigNumberish as eBigNumberish } from "ethers";
 import { convert } from "./convert";
-import { flatMap } from 'lodash';
+import { flatMap } from "lodash";
 import { getCreate2Address, keccak256 } from "ethers/lib/utils";
 
 type BigNumberish = BigNumber | eBigNumberish;
@@ -25,8 +24,10 @@ export type {
   Trade,
 };
 
-export const INIT_CODE_HASH_SUSHI = '0xe18a34eb0e04b04f7a0ac29a6e80748dca96319b42c54d679cb821dca90c6303'
-export const INIT_CODE_HASH_UNI = '0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f'
+export const INIT_CODE_HASH_SUSHI =
+  "0xe18a34eb0e04b04f7a0ac29a6e80748dca96319b42c54d679cb821dca90c6303";
+export const INIT_CODE_HASH_UNI =
+  "0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f";
 
 export type TokenInput = {
   id?: string;
@@ -44,7 +45,8 @@ export function sortTokens(tokenA: string, tokenB: string): string[] {
 
 export function computeUniswapPairAddress(
   tokenA: string,
-  tokenB: string
+  tokenB: string,
+  uniswapFactoryAddress: string
 ): string {
   const initCodeHash = INIT_CODE_HASH_UNI;
   const [token0, token1] = sortTokens(tokenA, tokenB);
@@ -54,12 +56,13 @@ export function computeUniswapPairAddress(
       convert.toAddressBuffer(token1),
     ])
   );
-  return getCreate2Address(UNISWAP_FACTORY_ADDRESS, salt, initCodeHash);
+  return getCreate2Address(uniswapFactoryAddress, salt, initCodeHash);
 }
 
 export function computeSushiswapPairAddress(
   tokenA: string,
-  tokenB: string
+  tokenB: string,
+  sushiswapFactoryAddress: string
 ): string {
   const initCodeHash = INIT_CODE_HASH_SUSHI;
   const [token0, token1] = sortTokens(tokenA, tokenB);
@@ -69,7 +72,7 @@ export function computeSushiswapPairAddress(
       convert.toAddressBuffer(token1),
     ])
   );
-  return getCreate2Address(SUSHISWAP_FACTORY_ADDRESS, salt, initCodeHash);
+  return getCreate2Address(sushiswapFactoryAddress, salt, initCodeHash);
 }
 
 /**
@@ -91,19 +94,23 @@ export const bigNumberishToBigInt = (amount: BigNumberish): BigInt =>
 export const bestTradeExactIn = Trade.bestTradeExactIn;
 export const bestTradeExactOut = Trade.bestTradeExactOut;
 
-export function buildCommonTokenPairs(_tokens: string[]) {
-  const bases = COMMON_BASE_TOKENS.map(t => t.id).filter(t => t !== constants.AddressZero);
-  const tokens = _tokens.filter(t => t !== constants.AddressZero && !bases.includes(t));
-  const basePairs = flatMap(
-    bases, (base): [string, string][] => bases.map(otherBase => [base.toLowerCase(), otherBase.toLowerCase()])
+export function buildCommonTokenPairs(
+  _tokens: string[],
+  commonBaseTokens: any[]
+) {
+  const bases = commonBaseTokens
+    .map((t) => t.id)
+    .filter((t) => t !== constants.AddressZero);
+  const tokens = _tokens.filter(
+    (t) => t !== constants.AddressZero && !bases.includes(t)
   );
-  const tokensToBases = flatMap(
-    tokens, (token): [string, string][] => bases.map(base => [base.toLowerCase(), token.toLowerCase()])
+  const basePairs = flatMap(bases, (base): [string, string][] =>
+    bases.map((otherBase) => [base.toLowerCase(), otherBase.toLowerCase()])
   );
-  const pairs = [
-    ...basePairs,
-    ...tokensToBases
-  ].filter(
+  const tokensToBases = flatMap(tokens, (token): [string, string][] =>
+    bases.map((base) => [base.toLowerCase(), token.toLowerCase()])
+  );
+  const pairs = [...basePairs, ...tokensToBases].filter(
     ([t0, t1]) => t0 !== t1
   );
   return pairs;

@@ -1,20 +1,17 @@
-import {
-  ADAPTER_REGISTRY_ADDRESS,
-  BURN_ROUTER_ADDRESS,
-  DNDX_ADDRESS,
-  DNDX_TIMELOCK_ADDRESS,
-  MASTER_CHEF_ADDRESS,
-  MINT_ROUTER_ADDRESS,
-  MULTICALL2_ADDRESS,
-  MULTI_TOKEN_STAKING_ADDRESS,
-  NARWHAL_ROUTER_ADDRESS,
-  UNISWAP_ROUTER_ADDRESS,
-} from "config";
-
 import { ContractTypeLookup, InterfaceKind, getContract } from "ethereum";
+import { selectors, useSigner } from "features";
+import { useSelector } from "react-redux";
 
-import { useSigner } from "features";
+// Networks
+export const useNetworkAddresses = () => {
+  return useSelector(selectors.selectNetworkAddresses);
+};
 
+export const useCommonBaseTokens = () => {
+  return useSelector(selectors.selectCommonBaseTokens);
+};
+
+// Contracts
 export function useContractWithSigner<T extends InterfaceKind>(
   address: string,
   name: T
@@ -26,7 +23,9 @@ export function useContractWithSigner<T extends InterfaceKind>(
 }
 
 export function useAdapterRegistryContract() {
-  return useContractWithSigner(ADAPTER_REGISTRY_ADDRESS, "AdapterRegistry");
+  const { adapterRegistry } = useNetworkAddresses();
+
+  return useContractWithSigner(adapterRegistry, "AdapterRegistry");
 }
 
 export function useErc20AdapterContract(address: string) {
@@ -34,14 +33,15 @@ export function useErc20AdapterContract(address: string) {
 }
 
 export function useDNDXContract() {
-  return useContractWithSigner(DNDX_ADDRESS, "ERC20DividendsOwned");
+  const { dndx } = useNetworkAddresses();
+
+  return useContractWithSigner(dndx, "ERC20DividendsOwned");
 }
 
 export function useTimelockContract() {
-  return useContractWithSigner(
-    DNDX_TIMELOCK_ADDRESS.toLowerCase(),
-    "SharesTimeLock"
-  );
+  const { dndxTimelock } = useNetworkAddresses();
+
+  return useContractWithSigner(dndxTimelock.toLowerCase(), "SharesTimeLock");
 }
 
 export function useTokenContract(address: string) {
@@ -53,21 +53,21 @@ export function useIIndexedUniswapV2OracleContract(address: string) {
 }
 
 export function useIndexedNarwhalRouterContract() {
-  return useContractWithSigner(NARWHAL_ROUTER_ADDRESS, "IndexedNarwhalRouter");
+  const { narwhalRouter } = useNetworkAddresses();
+
+  return useContractWithSigner(narwhalRouter, "IndexedNarwhalRouter");
 }
 
 export function useBurnRouterContract() {
-  return useContractWithSigner(
-    BURN_ROUTER_ADDRESS,
-    "IndexedUniswapRouterBurner"
-  );
+  const { burnRouter } = useNetworkAddresses();
+
+  return useContractWithSigner(burnRouter, "IndexedUniswapRouterBurner");
 }
 
 export function useMintRouterContract() {
-  return useContractWithSigner(
-    MINT_ROUTER_ADDRESS,
-    "IndexedUniswapRouterMinter"
-  );
+  const { mintRouter } = useNetworkAddresses();
+
+  return useContractWithSigner(mintRouter, "IndexedUniswapRouterMinter");
 }
 
 export function useIndexPoolContract(address: string) {
@@ -79,18 +79,21 @@ export function useIPoolInitializerContract(address: string) {
 }
 
 export function useMasterChefContract() {
-  return useContractWithSigner(MASTER_CHEF_ADDRESS, "MasterChef");
+  const { masterchef } = useNetworkAddresses();
+
+  return useContractWithSigner(masterchef, "MasterChef");
 }
 
 export function useMultiCall2Contract() {
-  return useContractWithSigner(MULTICALL2_ADDRESS, "MultiCall2");
+  const { multicall2 } = useNetworkAddresses();
+
+  return useContractWithSigner(multicall2, "MultiCall2");
 }
 
 export function useMultiTokenStakingContract() {
-  return useContractWithSigner(
-    MULTI_TOKEN_STAKING_ADDRESS,
-    "MultiTokenStaking"
-  );
+  const { multiTokenStaking } = useNetworkAddresses();
+
+  return useContractWithSigner(multiTokenStaking, "MultiTokenStaking");
 }
 
 export function useNirnVaultContract(address: string) {
@@ -106,7 +109,9 @@ export function useRewardsScheduleContract(address: string) {
 }
 
 export function useSharesTimeLockContract() {
-  return useContractWithSigner(DNDX_TIMELOCK_ADDRESS, "SharesTimeLock");
+  const { dndxTimelock } = useNetworkAddresses();
+
+  return useContractWithSigner(dndxTimelock, "SharesTimeLock");
 }
 
 export function useStakingRewardsContract(address: string) {
@@ -118,5 +123,7 @@ export function useStakingRewardsFactoryContract(address: string) {
 }
 
 export function useUniswapRouterContract() {
-  return useContractWithSigner(UNISWAP_ROUTER_ADDRESS, "UniswapV2Router");
+  const { uniswapRouter } = useNetworkAddresses();
+
+  return useContractWithSigner(uniswapRouter, "UniswapV2Router");
 }

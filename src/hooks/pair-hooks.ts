@@ -10,6 +10,7 @@ import {
 } from "helpers";
 import { useCallRegistrar } from "./use-call-registrar";
 import { useCallback, useEffect, useMemo } from "react";
+import { useCommonBaseTokens, useNetworkAddresses } from "./contract-hooks";
 import { useDispatch, useSelector } from "react-redux";
 import BigNumber from "bignumber.js";
 import type { AppState, FormattedPair, NormalizedToken } from "features";
@@ -66,22 +67,31 @@ type PairToken = {
   sushiswap?: boolean;
 };
 
-export function buildUniswapPairs(baseTokens: string[]) {
-  const tokenPairs = buildCommonTokenPairs(baseTokens);
+export function buildUniswapPairs(
+  baseTokens: string[],
+  commonBaseTokens: any[],
+  uniswapFactoryAddress: string,
+  sushiswapFactoryAddress: string
+) {
+  const tokenPairs = buildCommonTokenPairs(baseTokens, commonBaseTokens);
   const pairs: PairToken[] = tokenPairs.reduce((arr, [tokenA, tokenB]) => {
     const [token0, token1] = sortTokens(tokenA, tokenB);
 
     return [
       ...arr,
       {
-        id: computeUniswapPairAddress(token0, token1),
+        id: computeUniswapPairAddress(token0, token1, uniswapFactoryAddress),
         exists: undefined,
         token0,
         token1,
         sushiswap: false,
       },
       {
-        id: computeSushiswapPairAddress(token0, token1),
+        id: computeSushiswapPairAddress(
+          token0,
+          token1,
+          sushiswapFactoryAddress
+        ),
         exists: undefined,
         token0,
         token1,
@@ -137,7 +147,18 @@ export function useUniswapPairs(
 export function useCommonUniswapPairs(
   baseTokens: string[]
 ): [Pair[], false] | [undefined, true] {
-  const pairs = useMemo(() => buildUniswapPairs(baseTokens), [baseTokens]);
+  const commonBaseTokens = useCommonBaseTokens();
+  const { uniswapFactory, sushiswapFactory } = useNetworkAddresses();
+  const pairs = useMemo(
+    () =>
+      buildUniswapPairs(
+        baseTokens,
+        commonBaseTokens,
+        uniswapFactory,
+        sushiswapFactory
+      ),
+    [baseTokens, commonBaseTokens, uniswapFactory, sushiswapFactory]
+  );
   return useUniswapPairs(pairs);
 }
 
@@ -156,7 +177,7 @@ export function useUniswapTradingPairs(baseTokens: string[]) {
           convert.toUniswapSDKCurrencyAmount(
             { network: { chainId: 1 } },
             tokenIn,
-            amountIn,
+            amountIn
           ) as TokenAmount,
           convert.toUniswapSDKCurrency(
             { network: { chainId: 1 } },
@@ -186,7 +207,7 @@ export function useUniswapTradingPairs(baseTokens: string[]) {
           convert.toUniswapSDKCurrencyAmount(
             { network: { chainId: 1 } },
             tokenOut,
-            amountOut,
+            amountOut
           ) as TokenAmount,
           opts ?? { maxHops: 3, maxNumResults: 1 }
         );

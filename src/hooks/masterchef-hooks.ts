@@ -1,5 +1,4 @@
 import { AppState, selectors } from "features";
-import { MASTER_CHEF_ADDRESS, SUSHI_ADDRESS } from "config";
 import {
   MasterChefPool,
   masterChefCaller,
@@ -14,6 +13,7 @@ import { useCachedValue } from "./use-debounce";
 import { useCallRegistrar } from "./use-call-registrar";
 import { useCallback, useMemo } from "react";
 import { useMasterChefContract } from "./contract-hooks";
+import { useNetworkAddresses } from "./contract-hooks";
 import { usePairTokenPrice, useTokenPrice } from "./token-hooks";
 import { useSelector } from "react-redux";
 import { useUniswapPairs } from "./pair-hooks";
@@ -53,11 +53,12 @@ export const useMasterChefInfoLookup = (ids: string[]) =>
   );
 
 export function useMasterChefApy(pid: string) {
+  const { sushi } = useNetworkAddresses();
   const meta = useSelector((state: AppState) =>
     selectors.selectMasterChefMeta(state)
   );
   const stakingPool = useMasterChefPool(pid);
-  const [sushiPrice] = useTokenPrice(SUSHI_ADDRESS);
+  const [sushiPrice] = useTokenPrice(sushi);
   const tokenPrice = usePairTokenPrice(stakingPool?.token ?? "");
 
   return useMemo(() => {
@@ -88,6 +89,7 @@ export function useMasterChefApy(pid: string) {
 export function createMasterChefCalls(
   pid: string,
   stakingToken: string,
+  masterChefAddress: string,
   userAddress?: string
 ): RegisteredCall[] {
   const onChainCalls: RegisteredCall[] = [
@@ -95,11 +97,11 @@ export function createMasterChefCalls(
       interfaceKind: "IERC20",
       target: stakingToken,
       function: "balanceOf",
-      args: [MASTER_CHEF_ADDRESS],
+      args: [masterChefAddress],
     },
     {
       interfaceKind: "MasterChef",
-      target: MASTER_CHEF_ADDRESS,
+      target: masterChefAddress,
       function: "poolInfo",
       args: [pid],
     },
@@ -109,13 +111,13 @@ export function createMasterChefCalls(
     onChainCalls.push(
       {
         interfaceKind: "MasterChef",
-        target: MASTER_CHEF_ADDRESS,
+        target: masterChefAddress,
         function: "userInfo",
         args: [pid, userAddress],
       },
       {
         interfaceKind: "MasterChef",
-        target: MASTER_CHEF_ADDRESS,
+        target: masterChefAddress,
         function: "pendingSushi",
         args: [pid, userAddress],
       }
@@ -140,6 +142,7 @@ export const useMasterChefPoolsWithRecognizedPairs = () => {
 };
 
 export function useMasterChefRegistrar() {
+  const { masterchef } = useNetworkAddresses();
   const userAddress = useUserAddress();
   const stakingPools: MasterChefPool[] =
     useMasterChefPoolsWithRecognizedPairs();
@@ -158,7 +161,7 @@ export function useMasterChefRegistrar() {
         onChainCalls: [
           {
             interfaceKind: "MasterChef",
-            target: MASTER_CHEF_ADDRESS,
+            target: masterchef,
             function: "totalAllocPoint",
           },
         ],
@@ -168,7 +171,7 @@ export function useMasterChefRegistrar() {
         offChainCalls: RegisteredCall[];
       }
     );
-  }, [stakingPools, userAddress]);
+  }, [stakingPools, userAddress, masterchef]);
 
   useCallRegistrar({
     caller: masterChefCaller,

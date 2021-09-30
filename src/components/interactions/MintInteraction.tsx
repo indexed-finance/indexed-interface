@@ -1,8 +1,3 @@
-import {
-  DISPLAYED_COMMON_BASE_TOKENS,
-  NARWHAL_ROUTER_ADDRESS,
-  SLIPPAGE_RATE,
-} from "config";
 import { FormattedIndexPool, selectors } from "features";
 import {
   MultiInteraction,
@@ -10,12 +5,14 @@ import {
   SingleInteraction,
   SingleInteractionValues,
 } from "./BaseInteraction";
+import { SLIPPAGE_RATE } from "config";
 import { convert } from "helpers";
 import { downwardSlippage, upwardSlippage } from "ethereum";
 import {
   useBalanceAndApprovalRegistrar,
   useMintRouterCallbacks,
   useMultiTokenMintCallbacks,
+  useNetworkAddresses,
   usePoolTokenAddresses,
   useSingleTokenMintCallbacks,
 } from "hooks";
@@ -162,8 +159,12 @@ function SingleTokenMintInteraction({ indexPool }: Props) {
 }
 
 function UniswapMintInteraction({ indexPool }: Props) {
+  const displayedCommonBaseTokens = useSelector(
+    selectors.selectDisplayedCommonBaseTokens
+  );
+  const { narwhalRouter } = useNetworkAddresses();
   const tokenLookup = useSelector(selectors.selectTokenLookupBySymbol);
-  const assets = [...DISPLAYED_COMMON_BASE_TOKENS];
+  const assets = [...displayedCommonBaseTokens];
   const {
     getBestMintRouteForAmountIn,
     getBestMintRouteForAmountOut,
@@ -273,8 +274,8 @@ function UniswapMintInteraction({ indexPool }: Props) {
     [executeRoutedMint]
   );
 
-  useBalanceAndApprovalRegistrar(NARWHAL_ROUTER_ADDRESS.toLowerCase(), [
-    ...DISPLAYED_COMMON_BASE_TOKENS.map(({ id }) => id),
+  useBalanceAndApprovalRegistrar(narwhalRouter.toLowerCase(), [
+    ...displayedCommonBaseTokens.map(({ id }) => id),
   ]);
 
   return (
@@ -287,7 +288,7 @@ function UniswapMintInteraction({ indexPool }: Props) {
         }[]
       }
       loading={loading}
-      spender={NARWHAL_ROUTER_ADDRESS}
+      spender={narwhalRouter}
       onSubmit={handleSubmit}
       onChange={handleChange}
       defaultInputSymbol={assets[0].symbol}

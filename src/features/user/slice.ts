@@ -1,9 +1,9 @@
-import { ETH_BALANCE_GETTER, NDX_ADDRESS } from "config";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { constants } from "ethers"; // Circular dependency.
 import { convert, createMulticallDataParser } from "helpers";
 import { fetchMulticallData } from "../batcher/requests";
 import { stakingMulticallDataParser } from "../staking";
+import { store } from "../store";
 import { tokensSelectors } from "../tokens";
 import { transactionFinalized } from "../transactions/actions";
 import type { AppState } from "../store";
@@ -159,6 +159,9 @@ export const userSelectors = {
 const userMulticallDataParser = createMulticallDataParser("User", (calls) => {
   const formattedUserDetails = calls.reduce(
     (prev, next) => {
+      const state = store.getState();
+      const { ndx, ethBalanceGetter } =
+        state.networks.byId[state.networks.current].addresses;
       const [, details] = next;
       const { allowance: allowanceCall, balanceOf: balanceOfCall } = details;
 
@@ -166,7 +169,7 @@ const userMulticallDataParser = createMulticallDataParser("User", (calls) => {
         const [_allowanceCall] = allowanceCall;
         const [_balanceOfCall] = balanceOfCall;
         let tokenAddress = _allowanceCall.target.toLowerCase();
-        if (tokenAddress === ETH_BALANCE_GETTER.toLowerCase()) {
+        if (tokenAddress === ethBalanceGetter.toLowerCase()) {
           tokenAddress = constants.AddressZero;
         }
         const [, poolAddress] = _allowanceCall.args!;
@@ -186,14 +189,14 @@ const userMulticallDataParser = createMulticallDataParser("User", (calls) => {
         const [_balanceOfCall] = balanceOfCall;
         const [balanceOf] = _balanceOfCall.result ?? [];
         let tokenAddress = _balanceOfCall.target.toLowerCase();
-        if (tokenAddress === ETH_BALANCE_GETTER.toLowerCase()) {
+        if (tokenAddress === ethBalanceGetter.toLowerCase()) {
           tokenAddress = constants.AddressZero;
         }
         const value = (balanceOf ?? "").toString();
 
         prev.balances[tokenAddress] = value;
 
-        if (tokenAddress === NDX_ADDRESS.toLowerCase()) {
+        if (tokenAddress === ndx.toLowerCase()) {
           prev.ndx = value;
         }
       }

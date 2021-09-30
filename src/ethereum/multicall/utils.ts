@@ -6,9 +6,9 @@ import {
   ParamType,
 } from "@ethersproject/abi";
 import { JsonRpcProvider, JsonRpcSigner } from "@ethersproject/providers";
-import { MULTICALL2_ADDRESS } from "../../config";
 import { chunk } from "lodash";
 import { getContract } from "ethereum/abi";
+import { store } from "features";
 import type { Call, MulticallResults } from "./types";
 
 interface CondensedCall {
@@ -82,12 +82,11 @@ async function executeChunk(
   _calls: CondensedCall[],
   _strict?: boolean
 ) {
+  const state = store.getState();
+  const { multicall2 } = state.networks.byId[state.networks.current].addresses;
+
   try {
-    const multicallContract = getContract(
-      MULTICALL2_ADDRESS,
-      "MultiCall2",
-      _provider
-    );
+    const multicallContract = getContract(multicall2, "MultiCall2", _provider);
     const { blockNumber, returnData } =
       await multicallContract.callStatic.tryBlockAndAggregate(
         false,

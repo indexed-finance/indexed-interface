@@ -1,4 +1,4 @@
-import { INFURA_ID, MASTER_CHEF_ADDRESS } from "config";
+import { INFURA_ID } from "config";
 import {
   TOKEN_PRICES_CALLER,
   buildUniswapPairs,
@@ -8,7 +8,13 @@ import {
   createTotalSuppliesCalls,
   createVaultCalls,
 } from "hooks";
-import { VAULTS_CALLER, actions, fetchVaultsData, selectors, store } from "features";
+import {
+  VAULTS_CALLER,
+  actions,
+  fetchVaultsData,
+  selectors,
+  store,
+} from "features";
 import { createMasterChefCalls } from "hooks/masterchef-hooks";
 import { createNewStakingCalls } from "hooks/new-staking-hooks";
 import { log } from "./helpers";
@@ -25,7 +31,7 @@ const poolsRegistered: Record<string, boolean> = {};
 const tokensRegistered: Record<string, boolean> = {};
 const pairsRegistered: Record<string, boolean> = {};
 const stakingPoolsRegistered: Record<string, boolean> = {};
-const vaultsRegistered: Record<string, string> = {}
+const vaultsRegistered: Record<string, string> = {};
 
 const NEW_SUBSCRIBER_DELAY_SECONDS = 15;
 
@@ -39,15 +45,20 @@ function setSubscription() {
     const indexPools = selectors.selectAllPools(state);
     const stakingPools = selectors.selectAllStakingPools(state);
     const tokens = selectors.selectAllTokens(state);
-    const vaults = selectors.selectAllVaults(state)
+    const vaults = selectors.selectAllVaults(state);
 
-    if (indexPools.length > 0 && tokens.length > 0 && stakingPools.length > 0 && vaults.length > 0) {
+    if (
+      indexPools.length > 0 &&
+      tokens.length > 0 &&
+      stakingPools.length > 0 &&
+      vaults.length > 0
+    ) {
       unsubscribe();
       const allCalls = [
         ...registerNewPools(),
         ...registerNewTokensAndPairs(),
         ...registerNewStakingPools(),
-        ...registerNewVaults()
+        ...registerNewVaults(),
       ].filter((c) => c.offChainCalls.length > 0 || c.onChainCalls.length > 0);
       if (allCalls.length > 0) {
         dispatch(actions.callsRegistered(allCalls));
@@ -81,34 +92,44 @@ export async function setupStateHandling() {
   );
   dispatch(
     fetchVaultsData({
-      provider
+      provider,
     })
-  )
+  );
 }
 
 function registerNewVaults() {
   const state = getState();
   const vaults = selectors.selectAllVaults(state);
   const caller = VAULTS_CALLER;
-  const { vaultCalls } = vaults.reduce((prev, next) => {
-    const { onChainCalls, offChainCalls } = createVaultCalls(next.id, next.adapters.map(a => a.id), next.underlying.id);
-    prev.vaultCalls.onChainCalls.push(...onChainCalls)
-    prev.vaultCalls.offChainCalls.push(...offChainCalls)
-    return prev;
-  }, {
-    vaultCalls: {
-      caller,
-      onChainCalls: [] as RegisteredCall[],
-      offChainCalls: [] as RegisteredCall[],
+  const { vaultCalls } = vaults.reduce(
+    (prev, next) => {
+      const { onChainCalls, offChainCalls } = createVaultCalls(
+        next.id,
+        next.adapters.map((a) => a.id),
+        next.underlying.id
+      );
+      prev.vaultCalls.onChainCalls.push(...onChainCalls);
+      prev.vaultCalls.offChainCalls.push(...offChainCalls);
+      return prev;
+    },
+    {
+      vaultCalls: {
+        caller,
+        onChainCalls: [] as RegisteredCall[],
+        offChainCalls: [] as RegisteredCall[],
+      },
     }
-  })
-  return [vaultCalls]
+  );
+  return [vaultCalls];
 }
 
 const BLOCKS_PER_DAY = 86400 / 13.5;
 
 function registerNewTokensAndPairs() {
   const state = getState();
+  const { uniswapFactory, sushiswapFactory } =
+    selectors.selectNetworkAddresses(state);
+  const commonBaseTokens = selectors.selectCommonBaseTokens(state);
   const allTokens = selectors.selectAllTokens(state);
   const allPairIds = Object.keys(state.pairs.entities).map((id) =>
     id.toLowerCase()
@@ -122,9 +143,12 @@ function registerNewTokensAndPairs() {
         !allPairIds.includes(tokenId.toLowerCase())
     );
 
-  const pairs = buildUniswapPairs(allTokenIds).filter(
-    (pair) => !pairsRegistered[pair.id.toLowerCase()]
-  );
+  const pairs = buildUniswapPairs(
+    allTokenIds,
+    commonBaseTokens,
+    uniswapFactory,
+    sushiswapFactory
+  ).filter((pair) => !pairsRegistered[pair.id.toLowerCase()]);
 
   dispatch(actions.uniswapPairsRegistered(pairs));
   const pairDataCalls = {
@@ -194,6 +218,7 @@ function registerNewPools() {
 
 function registerNewStakingPools() {
   const state = getState();
+  const { masterchef } = selectors.selectNetworkAddresses(state);
   const stakingPools = selectors
     .selectAllStakingPools(state)
     .filter((pool) => !stakingPoolsRegistered[pool.id.toLowerCase()]);
@@ -267,7 +292,11 @@ function registerNewStakingPools() {
   if (masterChefPairs.length > 0) {
     const mcCalls = masterChefPairs.reduce(
       (prev, next) => {
-        const poolCalls = createMasterChefCalls(next.id, next.token);
+        const poolCalls = createMasterChefCalls(
+          next.id,
+          next.token,
+          masterchef
+        );
         prev.onChainCalls.push(...poolCalls);
         return prev;
       },
@@ -276,7 +305,7 @@ function registerNewStakingPools() {
         onChainCalls: [
           {
             interfaceKind: "MasterChef",
-            target: MASTER_CHEF_ADDRESS,
+            target: masterchef,
             function: "totalAllocPoint",
           },
         ],

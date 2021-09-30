@@ -1,4 +1,3 @@
-import { NDX_ADDRESS, WETH_CONTRACT_ADDRESS } from "config";
 import {
   PayloadAction,
   createEntityAdapter,
@@ -11,6 +10,7 @@ import {
 } from "helpers";
 import { fetchMulticallData } from "../batcher/requests"; // Circular dependency.
 import { mirroredServerState, restartedDueToError } from "../actions";
+import { networksSelectors } from "../networks/slice";
 import type { AppState } from "../store";
 import type { NormalizedPair } from "./types";
 
@@ -114,7 +114,12 @@ export const pairsSelectors = {
   selectAllUpdatedPairs: (state: AppState) =>
     selectors.selectAll(state).filter((pair) => pair.exists !== undefined),
   selectTokenPair: (state: AppState, tokenA: string, tokenB: string) => {
-    const pairAddress = computeUniswapPairAddress(tokenA, tokenB);
+    const { uniswapFactory } = networksSelectors.selectNetworkAddresses(state);
+    const pairAddress = computeUniswapPairAddress(
+      tokenA,
+      tokenB,
+      uniswapFactory
+    );
     return selectors.selectById(state, pairAddress.toLowerCase());
   },
   selectPairExistsLookup: (state: AppState, pairIds: string[]) => {
@@ -128,9 +133,12 @@ export const pairsSelectors = {
     );
   },
   selectNdxPrice(state: AppState, ethPrice: number) {
+    const { ndx, wethContract, uniswapFactory } =
+      state.networks.byId[state.networks.current].addresses;
     const wethNdxPair = computeUniswapPairAddress(
-      WETH_CONTRACT_ADDRESS,
-      NDX_ADDRESS
+      wethContract,
+      ndx,
+      uniswapFactory
     );
     const [pairData] = pairsSelectors.selectPairsById(state, [wethNdxPair]);
 
@@ -138,7 +146,7 @@ export const pairsSelectors = {
       const { token0, reserves0, reserves1 } = pairData;
 
       if (token0 && reserves0 && reserves1) {
-        const firstIsNdx = NDX_ADDRESS.toLowerCase() === token0.toLowerCase();
+        const firstIsNdx = ndx.toLowerCase() === token0.toLowerCase();
         const [firstValue, secondValue] = firstIsNdx
           ? [reserves1, reserves0]
           : [reserves0, reserves1];

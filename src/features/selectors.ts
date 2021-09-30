@@ -22,7 +22,6 @@ import {
   FormattedStakingDetail,
   stakingSelectors,
 } from "./staking";
-import { NDX_ADDRESS, WETH_CONTRACT_ADDRESS } from "config";
 import { NormalizedToken, tokensSelectors } from "./tokens";
 import { NormalizedTransaction, transactionsSelectors } from "./transactions";
 import { Pair } from "uniswap-types";
@@ -31,6 +30,7 @@ import { computeSushiswapPairAddress, convert } from "helpers";
 import { createSelector } from "reselect";
 import { dailySnapshotsSelectors } from "./dailySnapshots";
 import { formatDistance } from "date-fns";
+import { networksSelectors } from "./networks";
 import { newStakingSelectors } from "./newStaking";
 import { settingsSelectors } from "./settings";
 import { sortTokens } from "@indexed-finance/indexed.js/dist/utils/address";
@@ -48,6 +48,7 @@ export const selectors = {
   ...indexPoolsSelectors,
   ...settingsSelectors,
   ...stakingSelectors,
+  ...networksSelectors,
   ...newStakingSelectors,
   ...timelocksSelectors,
   ...tokensSelectors,
@@ -323,11 +324,17 @@ export const selectors = {
     );
   },
   selectPossibleMasterChefPairs(state: AppState) {
+    const { ndx, wethContract, sushiswapFactory } =
+      selectors.selectNetworkAddresses(state);
     const indexPoolIds = selectors.selectAllPoolIds(state);
-    return [...indexPoolIds, NDX_ADDRESS].map((token) => {
-      const [token0, token1] = sortTokens(token, WETH_CONTRACT_ADDRESS);
+    return [...indexPoolIds, ndx].map((token) => {
+      const [token0, token1] = sortTokens(token, wethContract);
       return {
-        id: computeSushiswapPairAddress(token0, token1).toLowerCase(),
+        id: computeSushiswapPairAddress(
+          token0,
+          token1,
+          sushiswapFactory
+        ).toLowerCase(),
         token0: token0.toLowerCase(),
         token1: token1.toLowerCase(),
         sushiswap: true,
@@ -410,14 +417,14 @@ export const selectors = {
   },
   // selectNewFormattedStakingToken
   selectNewFormattedStaking(state: AppState): FormattedNewStakingDetail {
+    const { wethContract } = selectors.selectNetworkAddresses(state);
     const stakingPools = selectors.selectAllNewStakingPools(state);
     const formattedStaking = stakingPools
       .map((stakingPool) => {
         let indexPoolAddress: string;
         if (stakingPool.isWethPair) {
           if (
-            stakingPool.token0?.toLowerCase() ===
-            WETH_CONTRACT_ADDRESS.toLowerCase()
+            stakingPool.token0?.toLowerCase() === wethContract.toLowerCase()
           ) {
             indexPoolAddress = stakingPool.token1 as string;
           } else {
@@ -499,6 +506,7 @@ export const selectors = {
     state: AppState,
     ethPrice: number
   ): FormattedPortfolioData {
+    const { ndx } = selectors.selectNetworkAddresses(state);
     const theme = selectors.selectTheme(state);
     const poolLookup = selectors.selectPoolLookup(state);
     const tokenLookup = selectors.selectTokenLookup(state);
@@ -550,7 +558,7 @@ export const selectors = {
     }));
     const formattedPortfolio = {
       ndx: {
-        address: NDX_ADDRESS,
+        address: ndx,
         image: `indexed-${theme}`,
         symbol: "NDX",
         name: "Indexed",

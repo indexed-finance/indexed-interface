@@ -9,11 +9,11 @@ import {
   getRandomEntries,
   sortTokens,
 } from "helpers";
-import { WETH_CONTRACT_ADDRESS } from "config";
 import { constants } from "ethers";
 import { useAddTransactionCallback } from "./transaction-hooks";
 import { useCallRegistrar } from "./use-call-registrar";
 import { useCallback, useEffect, useMemo } from "react";
+import { useNetworkAddresses } from "./contract-hooks";
 import { usePair, useUniswapPairs } from "./pair-hooks";
 import { useSelector } from "react-redux";
 import { useTokenContract } from "./contract-hooks";
@@ -196,18 +196,28 @@ export type PricedAsset = {
 export function useTokenPricesLookup(
   tokens: PricedAsset[]
 ): Record<string, number> {
+  const { uniswapFactory, sushiswapFactory, wethContract } =
+    useNetworkAddresses();
   const [baseTokenIds, pairTokens, pairTokenIds] = useMemo(() => {
     const baseTokenIds = [
       ...tokens.filter((t) => !t.useEthLpTokenPrice).map((t) => t.id),
-      WETH_CONTRACT_ADDRESS,
+      wethContract,
     ];
     const pairTokens = tokens
       .filter((t) => t.useEthLpTokenPrice)
       .map((token) => {
-        const [token0, token1] = sortTokens(token.id, WETH_CONTRACT_ADDRESS);
+        const [token0, token1] = sortTokens(token.id, wethContract);
         const id = token.sushiswap
-          ? computeSushiswapPairAddress(token0, token1).toLowerCase()
-          : computeUniswapPairAddress(token0, token1).toLowerCase();
+          ? computeSushiswapPairAddress(
+              token0,
+              token1,
+              sushiswapFactory
+            ).toLowerCase()
+          : computeUniswapPairAddress(
+              token0,
+              token1,
+              uniswapFactory
+            ).toLowerCase();
         return {
           id,
           token0,
@@ -217,10 +227,10 @@ export function useTokenPricesLookup(
         };
       });
     if (pairTokens.length) {
-      baseTokenIds.push(WETH_CONTRACT_ADDRESS);
+      baseTokenIds.push(wethContract);
     }
     return [baseTokenIds, pairTokens, pairTokens.map((p) => p.id)];
-  }, [tokens]);
+  }, [tokens, sushiswapFactory, uniswapFactory, wethContract]);
   // const [baseTokenPrices, baseTokenPricesLoading] = useTokenPrices(
   //   baseTokenIds
   // );
@@ -246,17 +256,13 @@ export function useTokenPricesLookup(
           (p) => p.liquidityToken.address.toLowerCase() === id
         );
         if (pair) {
-          priceMap[id] = getLpTokenPrice(
-            pair,
-            supply,
-            WETH_CONTRACT_ADDRESS,
-            ethPrice
-          );
+          priceMap[id] = getLpTokenPrice(pair, supply, wethContract, ethPrice);
         }
       }
     }
     return priceMap;
   }, [
+    wethContract,
     baseTokenIds,
     pairTokenIds,
     pairTokens,
@@ -270,19 +276,20 @@ export function useTokenPricesLookup(
 }
 
 export function usePairTokenPrice(id: string) {
+  const { wethContract } = useNetworkAddresses();
   const pairInfo = usePair(id);
   const [pairArr, supplyArr, pricedTokenId] = useMemo(() => {
     if (!pairInfo) return [[], [], ""];
     const { id, exists, token0, token1, sushiswap } = pairInfo;
     if (!token0 || !token1) return [[], [], ""];
     let pricedTokenId: string;
-    if (token0.toLowerCase() === WETH_CONTRACT_ADDRESS.toLowerCase()) {
+    if (token0.toLowerCase() === wethContract.toLowerCase()) {
       pricedTokenId = token0.toLowerCase();
     } else {
       pricedTokenId = token1.toLowerCase();
     }
     return [[{ id, exists, token0, token1, sushiswap }], [id], pricedTokenId];
-  }, [pairInfo]);
+  }, [pairInfo, wethContract]);
 
   const [tokenPrice, tokenPriceLoading] = useTokenPrice(pricedTokenId);
   const [pairs, pairsLoading] = useUniswapPairs(pairArr);
@@ -313,7 +320,10 @@ export function usePairTokenPrice(id: string) {
   ]);
 }
 
-export const useEthPrice = () => useTokenPrice(WETH_CONTRACT_ADDRESS);
+export const useEthPrice = () => {
+  const { wethContract } = useNetworkAddresses();
+  useTokenPrice(wethContract);
+};
 
 export function usePricesRegistrar(tokenIds: string[]) {
   useCallRegistrar({

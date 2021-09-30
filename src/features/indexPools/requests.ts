@@ -1,4 +1,3 @@
-import { WETH_CONTRACT_ADDRESS } from "config";
 import {
   computeUniswapPairAddress,
   getIndexedUrl,
@@ -85,7 +84,9 @@ export const fetchIndexPoolUpdates = createAsyncThunk(
 // #region Transactions
 export async function queryIndexPoolTransactions(
   { indexedUrl, uniswapUrl }: { indexedUrl: string; uniswapUrl: string },
-  poolAddresses: string[]
+  poolAddresses: string[],
+  wethContractAddress: string,
+  uniswapFactoryAddress: string
 ) {
   const createSingleSwapCall = (address: string) => `
       ${removeLeadingZero(
@@ -104,7 +105,8 @@ export async function queryIndexPoolTransactions(
         address
       )}: swaps(orderBy: timestamp, orderDirection: desc, first:10, where:{ pair: "${computeUniswapPairAddress(
     address,
-    WETH_CONTRACT_ADDRESS
+    wethContractAddress,
+    uniswapFactoryAddress
   ).toLowerCase()}"}) {
         transaction {
           id
@@ -160,7 +162,14 @@ export function normalizeIndexPoolTransactions(
 
 export const fetchIndexPoolTransactions = createAsyncThunk(
   "indexPools/fetchTransactions",
-  async ({ provider, arg: poolAddresses = [] }: OffChainRequest) => {
+  async (
+    { provider, arg: poolAddresses = [] }: OffChainRequest,
+    { getState }
+  ) => {
+    const state = getState() as any;
+    const { wethContract, uniswapFactory } =
+      state.networks.byId[state.networks.current].addresses;
+
     try {
       const { chainId } = await provider.getNetwork();
       const { swaps, trades } = await queryIndexPoolTransactions(
@@ -168,7 +177,9 @@ export const fetchIndexPoolTransactions = createAsyncThunk(
           indexedUrl: getIndexedUrl(chainId),
           uniswapUrl: getUniswapUrl(chainId),
         },
-        poolAddresses
+        poolAddresses,
+        wethContract,
+        uniswapFactory
       );
 
       return normalizeIndexPoolTransactions(poolAddresses, swaps, trades);

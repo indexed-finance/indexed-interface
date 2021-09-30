@@ -8,6 +8,7 @@ export * from './dailySnapshots';
 export * from './indexPools';
 export * from './masterChef';
 export * from './middleware';
+export * from './networks';
 export * from './newStaking';
 export * from './pairs';
 export * from './reducer';

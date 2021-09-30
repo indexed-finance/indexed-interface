@@ -18,7 +18,9 @@ const slice = createSlice({
     builder
       .addCase(fetchInitialData.fulfilled, (state, action) => {
         if (action.payload) {
-          const { dailySnapshots } = action.payload;
+          const {
+            data: { dailySnapshots },
+          } = action.payload;
           const fullSnapshots = dailySnapshots.ids.map(
             (id) => dailySnapshots.entities[id]
           );

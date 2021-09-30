@@ -1,7 +1,7 @@
 import { AppState, selectors, useSigner } from "features";
 import { BigNumber } from "ethereum";
-import { COMMON_BASE_TOKENS, SLIPPAGE_RATE } from "config";
 import { Currency, Trade } from "@indexed-finance/narwhal-sdk";
+import { SLIPPAGE_RATE } from "config";
 import {
   _calcAllInGivenPoolOut,
   calcPoolOutGivenSingleIn,
@@ -11,6 +11,7 @@ import {
 } from "ethereum";
 import { convert } from "helpers";
 import { useCallback, useMemo } from "react";
+import { useCommonBaseTokens } from "./contract-hooks";
 import {
   useMintMultiTransactionCallback,
   useMintSingleTransactionCallbacks,
@@ -177,12 +178,13 @@ export function useMultiTokenMintCallbacks(poolId: string) {
 
 // #region Routing
 export function useMintRouterCallbacks(poolId: string) {
+  const commonBaseTokens = useCommonBaseTokens();
   const poolTokens = usePoolUnderlyingTokens(poolId);
   const poolTokenIds = usePoolTokenAddresses(poolId);
   const tokenLookupBySymbol = useTokenLookupBySymbol();
   const tokenIds = useMemo(
-    () => [...poolTokenIds, ...COMMON_BASE_TOKENS.map(({ id }) => id)],
-    [poolTokenIds]
+    () => [...poolTokenIds, ...commonBaseTokens.map(({ id }) => id)],
+    [poolTokenIds, commonBaseTokens]
   );
   const { mintExactAmountIn, mintExactAmountOut } =
     useRoutedMintTransactionCallbacks(poolId);

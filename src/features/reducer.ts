@@ -4,6 +4,7 @@ import { combineReducers } from "@reduxjs/toolkit";
 import { dailySnapshotsReducer } from "./dailySnapshots";
 import { indexPoolsReducer } from "./indexPools";
 import { masterChefReducer } from "./masterChef";
+import { networksReducer } from "./networks";
 import { newStakingReducer } from "./newStaking";
 import { pairsReducer } from "./pairs";
 import { settingsReducer } from "./settings";
@@ -22,6 +23,7 @@ export const rootReducer = combineReducers({
   pairs: pairsReducer,
   settings: settingsReducer,
   staking: stakingReducer,
+  networks: networksReducer,
   newStaking: newStakingReducer,
   timelocks: timelocksReducer,
   tokens: tokensReducer,

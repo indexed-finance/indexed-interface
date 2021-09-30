@@ -111,7 +111,9 @@ const slice = createSlice({
     builder
       .addCase(fetchInitialData.fulfilled, (state, action) => {
         if (action.payload) {
-          const { categories } = action.payload;
+          const {
+            data: { categories },
+          } = action.payload;
           const mapped = selectors
             .selectAll({ categories: state } as AppState)
             .map((existing) => ({

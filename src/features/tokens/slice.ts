@@ -1,4 +1,3 @@
-import { COMMON_BASE_TOKENS } from "config";
 import {
   PayloadAction,
   createEntityAdapter,
@@ -63,10 +62,13 @@ const slice = createSlice({
       })
       .addCase(fetchInitialData.fulfilled, (state, action) => {
         if (action.payload) {
-          const { tokens } = action.payload;
+          const {
+            data: { tokens },
+            commonBaseTokens,
+          } = action.payload;
           const fullTokens = tokens.ids.map((id) => tokens.entities[id]);
 
-          for (const commonToken of COMMON_BASE_TOKENS) {
+          for (const commonToken of commonBaseTokens) {
             if (!tokens.entities[commonToken.id.toLowerCase()]) {
               fullTokens.push({
                 ...commonToken,
@@ -84,18 +86,26 @@ const slice = createSlice({
           const vaults = action.payload;
           const tokenLike: TokenLike[] = [
             ...vaults,
-            ...(vaults.reduce((arr, v) => ([
-              ...arr,
-              ...v.adapters.map(a => a.underlying),
-              ...v.adapters.map(a => a.wrapper),
-            ]), [] as TokenLike[]))
-          ].map(({ id, name, symbol, decimals }) => ({ id, name, symbol, decimals }));
+            ...vaults.reduce(
+              (arr, v) => [
+                ...arr,
+                ...v.adapters.map((a) => a.underlying),
+                ...v.adapters.map((a) => a.wrapper),
+              ],
+              [] as TokenLike[]
+            ),
+          ].map(({ id, name, symbol, decimals }) => ({
+            id,
+            name,
+            symbol,
+            decimals,
+          }));
           for (const token of tokenLike) {
             if (!state.entities[token.id.toLowerCase()]) {
-              newTokens.push(token)
+              newTokens.push(token);
             }
           }
-          tokensAdapter.upsertMany(state, newTokens)
+          tokensAdapter.upsertMany(state, newTokens);
         }
       })
       .addCase(fetchTokenPriceData.fulfilled, (state, action) => {

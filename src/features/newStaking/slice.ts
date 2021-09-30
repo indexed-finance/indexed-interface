@@ -1,4 +1,3 @@
-import { MULTI_TOKEN_STAKING_ADDRESS, REWARDS_SCHEDULE_ADDDRESS } from "config";
 import { NewStakingMeta, NewStakingPool, NewStakingUpdate } from "./types"; // Circular dependency.
 import { convert, createMulticallDataParser } from "helpers";
 import { createEntityAdapter, createSlice } from "@reduxjs/toolkit";
@@ -16,9 +15,9 @@ const adapter = createEntityAdapter<NewStakingPool>({
 
 const initialState = {
   metadata: {
-    id: MULTI_TOKEN_STAKING_ADDRESS,
+    id: "0xc46e0e7ecb3efcc417f6f89b940ffaff72556382",
     owner: "",
-    rewardsSchedule: REWARDS_SCHEDULE_ADDDRESS,
+    rewardsSchedule: "0x131ba0fc3e4e866e5daf3d16526846fdd3e67623",
     startBlock: 12454000,
     endBlock: 17232181,
     rewardsToken: "0x86772b1409b61c639eaac9ba0acfbb6e238e5f83",

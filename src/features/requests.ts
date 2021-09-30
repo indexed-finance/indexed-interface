@@ -5,7 +5,6 @@ import * as stakingRequests from "./staking/requests";
 import * as timelocksRequests from "./timelocks/requests";
 import * as tokensRequests from "./tokens/requests";
 import { MIN_WEIGHT } from "ethereum";
-import { NDX_ADDRESS, WETH_CONTRACT_ADDRESS } from "config";
 import { NirnSubgraphClient } from "@indexed-finance/subgraph-clients";
 import { convert, dedupe } from "helpers";
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -124,7 +123,11 @@ export async function queryInitialData(url: string): Promise<Category[]> {
   }
 }
 
-export function normalizeInitialData(categories: Category[]) {
+export function normalizeInitialData(
+  categories: Category[],
+  wethContractAddress: string,
+  ndxAddress: string
+) {
   return categories.reduce(
     (prev, next) => {
       const category = next;
@@ -261,16 +264,16 @@ export function normalizeInitialData(categories: Category[]) {
         entities: {},
       },
       tokens: {
-        ids: [WETH_CONTRACT_ADDRESS.toLowerCase(), NDX_ADDRESS.toLowerCase()],
+        ids: [wethContractAddress.toLowerCase(), ndxAddress.toLowerCase()],
         entities: {
-          [WETH_CONTRACT_ADDRESS.toLowerCase()]: {
-            id: WETH_CONTRACT_ADDRESS.toLowerCase(),
+          [wethContractAddress.toLowerCase()]: {
+            id: wethContractAddress.toLowerCase(),
             name: "Wrapped Ether",
             symbol: "WETH",
             decimals: 18,
           },
-          [NDX_ADDRESS.toLowerCase()]: {
-            id: NDX_ADDRESS.toLowerCase(),
+          [ndxAddress.toLowerCase()]: {
+            id: ndxAddress.toLowerCase(),
             name: "Indexed",
             symbol: "NDX",
             decimals: 18,
@@ -283,14 +286,22 @@ export function normalizeInitialData(categories: Category[]) {
 
 export const fetchInitialData = createAsyncThunk(
   "fetchInitialData",
-  async ({ provider }: OffChainRequest) => {
-    const { chainId } = provider.network;
-    const url = getIndexedUrl(chainId);
+  async ({ provider }: OffChainRequest, { getState }) => {
+    const state = getState() as any;
+    const network = state.networks.byId[state.networks.current];
+    const url = getIndexedUrl(network.id);
 
     try {
       const initial = await queryInitialData(url);
 
-      return normalizeInitialData(initial);
+      return {
+        data: normalizeInitialData(
+          initial,
+          network.addresses.wethContract,
+          network.addresses.ndx
+        ),
+        commonBaseTokens: network.commonBaseTokens,
+      };
     } catch (error) {
       return null;
     }

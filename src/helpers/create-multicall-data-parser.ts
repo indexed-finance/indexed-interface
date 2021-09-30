@@ -40,9 +40,9 @@ export function createMulticallDataParser<T>(
 
           return prev;
         }, {} as Record<string, Record<string, CallWithResult[]>>);
-      const relevantCalls = Object.entries(
-        onChainCalls
-      ).filter((each): each is RelevantCall => Boolean(each));
+      const relevantCalls = Object.entries(onChainCalls).filter(
+        (each): each is RelevantCall => Boolean(each)
+      );
       const formattedResults = formatter(relevantCalls);
 
       return formattedResults;

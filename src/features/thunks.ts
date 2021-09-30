@@ -10,6 +10,7 @@ import { fetchMasterChefData, masterChefActions } from "./masterChef";
 import { fetchNewStakingData } from "./newStaking";
 import { fetchStakingData, stakingActions } from "./staking";
 import { indexPoolsActions } from "./indexPools";
+import { networksActions } from "./networks";
 import { notification } from "antd";
 import { pairsActions } from "./pairs";
 import { providers } from "ethers";
@@ -144,6 +145,7 @@ export const actions = {
   ...pairsActions,
   ...settingsActions,
   ...stakingActions,
+  ...networksActions,
   ...tokensActions,
   ...timelocksActions,
   ...transactionsActions,
