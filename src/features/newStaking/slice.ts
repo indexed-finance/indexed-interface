@@ -43,7 +43,7 @@ const slice = createSlice({
       })
       .addCase(fetchMulticallData.fulfilled, (state, action) => {
         const relevantMulticallData = newStakingMulticallDataParser(
-          action.payload
+          action.payload.data
         );
         if (relevantMulticallData) {
           // console.log(`Got New Staking MultiCall Data`);

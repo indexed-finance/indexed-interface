@@ -43,7 +43,7 @@ const slice = createSlice({
       })
       .addCase(fetchMulticallData.fulfilled, (state, action) => {
         const relevantMulticallData = masterChefMulticallDataParser(
-          action.payload
+          action.payload.data
         );
         if (relevantMulticallData) {
           const {

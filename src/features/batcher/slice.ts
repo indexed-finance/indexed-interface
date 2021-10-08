@@ -172,7 +172,8 @@ const slice = createSlice({
         );
 
         state.status = "idle";
-        state.blockNumber = action.payload.blockNumber ?? state.blockNumber;
+        state.blockNumber =
+          action.payload.data.blockNumber ?? state.blockNumber;
       })
       .addCase(mirroredServerState, (state, action) => {
         state.blockNumber = action.payload.batcher.blockNumber;
@@ -190,7 +191,7 @@ const slice = createSlice({
             "batcher/multicall/fulfilled",
             "tokens/fetchPriceData/fulfilled",
             "newStaking/fetch/fulfilled",
-            "vaults/fetch/fulfilled"
+            "vaults/fetch/fulfilled",
           ].includes(action.type),
         (state, action) => {
           if (action.payload) {
@@ -203,7 +204,7 @@ const slice = createSlice({
               "batcher/multicall/fulfilled": "fetchMulticallData",
               "tokens/fetchPriceData/fulfilled": `getTokenPriceData/${potentialArgs}`,
               "newStaking/fetch/fulfilled": "fetchNewStakingData",
-              "vaults/fetch/fulfilled": "fetchVaultsData"
+              "vaults/fetch/fulfilled": "fetchVaultsData",
             };
             const call = callLookup[action.type as keyof typeof callLookup];
 
@@ -212,12 +213,14 @@ const slice = createSlice({
                 callsToResults: Record<string, string[]>;
               };
 
-              for (const [key, value] of Object.entries(callsToResults)) {
-                state.cache[key] = {
-                  result: value,
-                  fromBlockNumber: state.blockNumber,
-                };
-                state.fetching[key] = false;
+              if (callsToResults) {
+                for (const [key, value] of Object.entries(callsToResults)) {
+                  state.cache[key] = {
+                    result: value,
+                    fromBlockNumber: state.blockNumber,
+                  };
+                  state.fetching[key] = false;
+                }
               }
             } else {
               state.cache[call] = {

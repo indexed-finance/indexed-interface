@@ -6,6 +6,7 @@ import { stakingMulticallDataParser } from "../staking";
 import { tokensSelectors } from "../tokens";
 import { transactionFinalized } from "../transactions/actions";
 import type { AppState } from "../store";
+import type { Network } from "../networks";
 import type { NormalizedUser } from "./types";
 
 export type ApprovalStatus = "unknown" | "approval needed" | "approved";
@@ -36,8 +37,8 @@ const slice = createSlice({
   extraReducers: (builder) =>
     builder
       .addCase(fetchMulticallData.fulfilled, (state, action) => {
-        const userData = userMulticallDataParser(action.payload);
-        const stakingData = stakingMulticallDataParser(action.payload);
+        const userData = userMulticallDataParser(action.payload.data);
+        const stakingData = stakingMulticallDataParser(action.payload.data);
 
         if (userData) {
           const { allowances, balances, ndx } = userData;
@@ -156,67 +157,62 @@ export const userSelectors = {
 
 // #region Helpers
 const userMulticallDataParser = createMulticallDataParser("User", (calls) => {
-  const store = (window as any).__REDUX_STORE__;
+  const formattedUserDetails = calls.reduce(
+    (prev, next) => {
+      const { ndx, ethBalanceGetter } = ((window as any).network as Network)
+        .addresses;
+      const [, details] = next;
+      const { allowance: allowanceCall, balanceOf: balanceOfCall } = details;
 
-  if (store) {
-    const formattedUserDetails = calls.reduce(
-      (prev, next) => {
-        const state = store.getState() as AppState;
-        const { ndx, ethBalanceGetter } =
-          state.networks.byId[state.networks.current].addresses;
-        const [, details] = next;
-        const { allowance: allowanceCall, balanceOf: balanceOfCall } = details;
+      if (allowanceCall && balanceOfCall) {
+        const [_allowanceCall] = allowanceCall;
+        const [_balanceOfCall] = balanceOfCall;
+        let tokenAddress = _allowanceCall.target.toLowerCase();
+        if (tokenAddress === ethBalanceGetter.toLowerCase()) {
+          tokenAddress = constants.AddressZero;
+        }
+        const [, poolAddress] = _allowanceCall.args!;
+        const [allowance] = _allowanceCall.result ?? [];
+        const [balanceOf] = _balanceOfCall.result ?? [];
+        const combinedId = `user${poolAddress}-user${tokenAddress}`;
 
-        if (allowanceCall && balanceOfCall) {
-          const [_allowanceCall] = allowanceCall;
-          const [_balanceOfCall] = balanceOfCall;
-          let tokenAddress = _allowanceCall.target.toLowerCase();
-          if (tokenAddress === ethBalanceGetter.toLowerCase()) {
-            tokenAddress = constants.AddressZero;
-          }
-          const [, poolAddress] = _allowanceCall.args!;
-          const [allowance] = _allowanceCall.result ?? [];
-          const [balanceOf] = _balanceOfCall.result ?? [];
-          const combinedId = `user${poolAddress}-user${tokenAddress}`;
-
-          if (allowance) {
-            prev.allowances[combinedId.toLowerCase()] = allowance.toString();
-          }
-
-          if (balanceOf) {
-            prev.balances[tokenAddress.toLowerCase()] = balanceOf.toString();
-          }
-        } else if (balanceOfCall.length > 0 && balanceOfCall[0].result) {
-          // NDX token has no allowance.
-          const [_balanceOfCall] = balanceOfCall;
-          const [balanceOf] = _balanceOfCall.result ?? [];
-          let tokenAddress = _balanceOfCall.target.toLowerCase();
-          if (tokenAddress === ethBalanceGetter.toLowerCase()) {
-            tokenAddress = constants.AddressZero;
-          }
-          const value = (balanceOf ?? "").toString();
-
-          prev.balances[tokenAddress] = value;
-
-          if (tokenAddress === ndx.toLowerCase()) {
-            prev.ndx = value;
-          }
+        if (allowance) {
+          prev.allowances[combinedId.toLowerCase()] = allowance.toString();
         }
 
-        return prev;
-      },
-      {
-        allowances: {},
-        balances: {},
-        ndx: null,
-      } as {
-        allowances: Record<string, string>;
-        balances: Record<string, string>;
-        ndx: null | string;
-      }
-    );
+        if (balanceOf) {
+          prev.balances[tokenAddress.toLowerCase()] = balanceOf.toString();
+        }
+      } else if (balanceOfCall.length > 0 && balanceOfCall[0].result) {
+        // NDX token has no allowance.
+        const [_balanceOfCall] = balanceOfCall;
+        const [balanceOf] = _balanceOfCall.result ?? [];
+        let tokenAddress = _balanceOfCall.target.toLowerCase();
+        if (tokenAddress === ethBalanceGetter.toLowerCase()) {
+          tokenAddress = constants.AddressZero;
+        }
+        const value = (balanceOf ?? "").toString();
 
-    return formattedUserDetails;
-  }
+        prev.balances[tokenAddress] = value;
+
+        if (tokenAddress === ndx.toLowerCase()) {
+          prev.ndx = value;
+        }
+      }
+
+      return prev;
+    },
+    {
+      allowances: {},
+      balances: {},
+      ndx: null,
+    } as {
+      allowances: Record<string, string>;
+      balances: Record<string, string>;
+      ndx: null | string;
+    }
+  );
+
+  return formattedUserDetails;
 });
 // #endregion

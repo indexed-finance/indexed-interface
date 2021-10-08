@@ -19,8 +19,6 @@ const store = configureStore({
     : undefined,
 });
 
-(window as any).__REDUX_STORE__ = store;
-
 const persistState = debounce(() => {
   try {
     const { batcher, ...toSave } = store.getState();

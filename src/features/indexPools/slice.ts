@@ -26,7 +26,9 @@ const slice = createSlice({
   extraReducers: (builder) =>
     builder
       .addCase(fetchMulticallData.fulfilled, (state, action) => {
-        const relevantMulticallData = poolMulticallDataParser(action.payload);
+        const relevantMulticallData = poolMulticallDataParser(
+          action.payload.data
+        );
 
         if (relevantMulticallData) {
           for (const [poolAddress, results] of Object.entries(

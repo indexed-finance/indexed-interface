@@ -43,7 +43,9 @@ const slice = createSlice({
   extraReducers: (builder) =>
     builder
       .addCase(fetchMulticallData.fulfilled, (state, action) => {
-        const relevantMulticallData = pairMulticallDataParser(action.payload);
+        const relevantMulticallData = pairMulticallDataParser(
+          action.payload.data
+        );
 
         if (relevantMulticallData) {
           for (const [

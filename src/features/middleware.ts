@@ -1,5 +1,6 @@
 import { FEATURE_FLAGS } from "feature-flags";
 import { LOCALSTORAGE_KEY } from "config";
+import { MAINNET_NETWORK } from "./networks/slice";
 import { RegisteredCall, debugConsole, deserializeOnChainCall } from "helpers";
 import { actions, disconnectFromProvider, provider } from "./thunks";
 import {
@@ -79,11 +80,16 @@ if (!process.env.IS_SERVER) {
 }
 
 // #region Bad Network
+(window as any).network = MAINNET_NETWORK;
 export function badNetworkMiddleware({ dispatch, getState }: any) {
   return (next: any) => (action: any) => {
     const {
+      networks,
       settings: { badNetwork },
     } = getState();
+    const currentNetwork = networks.byId[networks.current];
+
+    (window as any).network = currentNetwork;
 
     if (
       action.type !== actions.userDisconnected.type &&

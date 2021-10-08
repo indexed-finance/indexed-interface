@@ -41,7 +41,7 @@ const slice = createSlice({
     builder
       .addCase(fetchMulticallData.fulfilled, (state, action) => {
         const relevantMulticallData = totalSuppliesMulticallDataParser(
-          action.payload
+          action.payload.data
         );
 
         if (relevantMulticallData) {

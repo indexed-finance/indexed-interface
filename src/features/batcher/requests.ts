@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ethers } from "ethers";
 import { multicall } from "ethereum/multicall/utils";
+import type { AppState } from "../store";
 import type { NormalizedMulticallData, SelectedBatch } from "./types";
 
 export function normalizeMulticallData(
@@ -47,17 +48,23 @@ export function normalizeMulticallData(
 
 export const fetchMulticallData = createAsyncThunk(
   "batcher/multicall",
-  async ({
-    provider,
-    arg: batch,
-  }: {
-    provider:
-      | ethers.providers.Web3Provider
-      | ethers.providers.JsonRpcProvider
-      | ethers.providers.InfuraProvider
-      | ethers.providers.JsonRpcSigner;
-    arg: Omit<SelectedBatch, "offChainCalls">;
-  }): Promise<NormalizedMulticallData> => {
+  async (
+    {
+      provider,
+      arg: batch,
+    }: {
+      provider:
+        | ethers.providers.Web3Provider
+        | ethers.providers.JsonRpcProvider
+        | ethers.providers.InfuraProvider
+        | ethers.providers.JsonRpcSigner;
+      arg: Omit<SelectedBatch, "offChainCalls">;
+    },
+    { getState }
+  ): Promise<{
+    data: NormalizedMulticallData;
+    network: any;
+  }> => {
     const { blockNumber, results } = await multicall(
       provider,
       batch.onChainCalls.deserializedCalls
@@ -67,6 +74,11 @@ export const fetchMulticallData = createAsyncThunk(
       blockNumber,
       results
     );
-    return formattedMulticallData;
+    const state = getState() as AppState;
+
+    return {
+      data: formattedMulticallData,
+      network: state.networks.byId[state.networks.current],
+    };
   }
 );
