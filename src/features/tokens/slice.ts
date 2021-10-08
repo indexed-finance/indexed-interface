@@ -4,9 +4,7 @@ import {
   createSlice,
 } from "@reduxjs/toolkit";
 import { createMulticallDataParser } from "helpers";
-import { fetchInitialData, fetchVaultsData } from "../requests"; // Circular dependency.
 import { fetchMulticallData } from "../batcher/requests";
-import { fetchTokenPriceData } from "./requests";
 import { mirroredServerState, restartedDueToError } from "../actions";
 import { pairsActions } from "../pairs";
 import type { NormalizedToken } from "./types";
@@ -60,13 +58,15 @@ const slice = createSlice({
 
         return state;
       })
-      .addCase(fetchInitialData.fulfilled, (state, action) => {
+      .addCase("fetchInitialData/fulfilled", (state, action: any) => {
         if (action.payload) {
           const {
             data: { tokens },
             commonBaseTokens,
           } = action.payload;
-          const fullTokens = tokens.ids.map((id) => tokens.entities[id]);
+          const fullTokens = tokens.ids.map(
+            (id: string) => tokens.entities[id]
+          );
 
           for (const commonToken of commonBaseTokens) {
             if (!tokens.entities[commonToken.id.toLowerCase()]) {
@@ -80,17 +80,17 @@ const slice = createSlice({
           tokensAdapter.upsertMany(state, fullTokens);
         }
       })
-      .addCase(fetchVaultsData.fulfilled, (state, action) => {
+      .addCase("fetchVaultsData/fulfilled", (state, action: any) => {
         const newTokens: NormalizedToken[] = [];
         if (action.payload) {
           const vaults = action.payload;
           const tokenLike: TokenLike[] = [
             ...vaults,
             ...vaults.reduce(
-              (arr, v) => [
+              (arr: any, v: any) => [
                 ...arr,
-                ...v.adapters.map((a) => a.underlying),
-                ...v.adapters.map((a) => a.wrapper),
+                ...v.adapters.map((a: any) => a.underlying),
+                ...v.adapters.map((a: any) => a.wrapper),
               ],
               [] as TokenLike[]
             ),
@@ -108,11 +108,12 @@ const slice = createSlice({
           tokensAdapter.upsertMany(state, newTokens);
         }
       })
-      .addCase(fetchTokenPriceData.fulfilled, (state, action) => {
+      .addCase("fetchTokenPriceData/fulfilled", (state, action: any) => {
         if (action.payload) {
           for (const [address, value] of Object.entries(action.payload)) {
             if (value) {
-              const { price, change24Hours, percentChange24Hours } = value;
+              const { price, change24Hours, percentChange24Hours } =
+                value as any;
               const entry = state.entities[address.toLowerCase()];
 
               if (entry) {

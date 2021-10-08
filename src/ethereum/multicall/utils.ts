@@ -8,7 +8,7 @@ import {
 import { JsonRpcProvider, JsonRpcSigner } from "@ethersproject/providers";
 import { chunk } from "lodash";
 import { getContract } from "ethereum/abi";
-import { store } from "features/store";
+import type { AppState } from "features/store";
 import type { Call, MulticallResults } from "./types";
 
 interface CondensedCall {
@@ -82,7 +82,8 @@ async function executeChunk(
   _calls: CondensedCall[],
   _strict?: boolean
 ) {
-  const state = store.getState();
+  const store = (window as any).__REDUX_STORE__;
+  const state = store.getState() as AppState;
   const { multicall2 } = state.networks.byId[state.networks.current].addresses;
 
   try {

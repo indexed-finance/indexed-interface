@@ -2,7 +2,7 @@ import * as balancerMath from "ethereum/utils/balancer-math";
 import { convert, createMulticallDataParser } from "helpers";
 import { createEntityAdapter, createSlice } from "@reduxjs/toolkit";
 import { fetchIndexPoolTransactions } from "./requests";
-import { fetchInitialData } from "../requests";
+// import { fetchInitialData } from "../requests";
 import { fetchMulticallData } from "../batcher/requests"; // Circular dependency.
 import { mirroredServerState, restartedDueToError } from "../actions";
 import type { CallWithResult } from "helpers";
@@ -61,12 +61,14 @@ const slice = createSlice({
 
         return state;
       })
-      .addCase(fetchInitialData.fulfilled, (state, action) => {
+      .addCase("fetchInitialData/fulfilled", (state, action: any) => {
         if (action.payload) {
           const {
             data: { indexPools },
           } = action.payload;
-          const fullPools = indexPools.ids.map((id) => indexPools.entities[id]);
+          const fullPools = indexPools.ids.map(
+            (id: string) => indexPools.entities[id]
+          );
 
           for (const { tokens } of fullPools) {
             for (const tokenId of tokens.ids) {

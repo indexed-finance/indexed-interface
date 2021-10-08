@@ -1,6 +1,5 @@
 import { DEFAULT_DECIMAL_COUNT } from "config";
 import { adapter } from "./slice";
-import { categoriesSelectors } from "features/categories";
 import { convert } from "helpers";
 import { createSelector } from "reselect";
 import { tokensSelectors } from "../tokens";
@@ -19,7 +18,8 @@ const selectAllPools = (state: AppState) => selectors.selectAll(state);
 const selectPool = (state: AppState, poolId: string) =>
   selectors.selectById(state, poolId);
 
-const selectAllPoolIds = (state: AppState) => selectors.selectIds(state).map(id => id.toString());
+const selectAllPoolIds = (state: AppState) =>
+  selectors.selectIds(state).map((id) => id.toString());
 
 const selectNameForPool = (state: AppState, poolId: string) => {
   const pool = selectPool(state, poolId);
@@ -88,31 +88,6 @@ const selectPoolInitializerAddress = (state: AppState, poolId: string) => {
   const pool = selectPool(state, poolId);
   return pool?.poolInitializer?.id ?? null;
 };
-
-const selectCategoryImage = (state: AppState, poolId: string) => {
-  const pool = selectPool(state, poolId);
-
-  if (pool) {
-    const { id } = pool.category;
-    const categoryLookup = categoriesSelectors.selectCategoryLookup(state);
-    const category = categoryLookup[id];
-
-    return category?.symbol ?? "";
-  } else {
-    return "";
-  }
-};
-
-const selectCategoryImagesByPoolIds = (state: AppState) =>
-  selectAllPools(state)
-    .map((pool) => ({
-      id: pool.id,
-      image: selectCategoryImage(state, pool.id),
-    }))
-    .reduce((prev, next) => {
-      prev[next.id] = next.image;
-      return prev;
-    }, {} as Record<string, string>);
 
 const selectPoolTokenEntities = (state: AppState, poolId: string) =>
   state.indexPools.entities[poolId.toLowerCase()]?.tokens.entities;
@@ -187,8 +162,6 @@ export const indexPoolsSelectors = {
   selectSwapFee,
   selectFormattedSwapFee,
   selectPoolInitializerAddress,
-  selectCategoryImage,
-  selectCategoryImagesByPoolIds,
   selectPoolUnderlyingTokens,
   selectPoolTokenAddresses,
   selectTokenWeights,

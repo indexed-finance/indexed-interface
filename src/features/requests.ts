@@ -4,7 +4,7 @@ import * as newStakingRequests from "./newStaking/requests";
 import * as stakingRequests from "./staking/requests";
 import * as timelocksRequests from "./timelocks/requests";
 import * as tokensRequests from "./tokens/requests";
-import { MIN_WEIGHT } from "ethereum";
+import { MIN_WEIGHT } from "ethereum/utils/balancer-math";
 import { NirnSubgraphClient } from "@indexed-finance/subgraph-clients";
 import { convert, dedupe } from "helpers";
 import { createAsyncThunk } from "@reduxjs/toolkit";
