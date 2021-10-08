@@ -1,6 +1,7 @@
-import { BigNumber, convert } from "helpers";
+import { BigNumber } from "bignumber.js";
 import { DEFAULT_DECIMAL_COUNT } from "config";
-import { TimeLockData } from "features";
+import { convert } from "./convert";
+import type { TimeLockData } from "features";
 
 export type Amount = {
   exact: BigNumber;
@@ -43,13 +44,15 @@ export function calculateDividendShares(
 export function formatDividendsLock(
   lock: TimeLockData
 ): FormattedDividendsLock {
-  const unlockAt = lock.createdAt + lock.duration
+  const unlockAt = lock.createdAt + lock.duration;
   const timestamp = Math.floor(Date.now() / 1000);
   const unlocked = timestamp >= unlockAt;
   const timeRemaining = Math.max(0, timestamp - unlockAt);
   const ndxAmount = formatAmount(lock.ndxAmount);
   const multiplier = calculateMultiplier(lock.duration);
-  const dndxShares = formatAmount(ndxAmount.exact.times(multiplier.exact).div(one));
+  const dndxShares = formatAmount(
+    ndxAmount.exact.times(multiplier.exact).div(one)
+  );
   const earlyWithdrawalFee: number | BigNumber = unlocked
     ? 0
     : calculateEarlyWithdrawalFee(ndxAmount.exact, unlockAt, lock.duration)

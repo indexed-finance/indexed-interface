@@ -8,7 +8,7 @@ import {
 import { JsonRpcProvider, JsonRpcSigner } from "@ethersproject/providers";
 import { chunk } from "lodash";
 import { getContract } from "ethereum/abi";
-import { store } from "features";
+import { store } from "features/store";
 import type { Call, MulticallResults } from "./types";
 
 interface CondensedCall {

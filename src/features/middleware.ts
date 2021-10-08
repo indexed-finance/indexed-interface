@@ -7,7 +7,7 @@ import {
   fetchIndexPoolUpdates,
 } from "./indexPools";
 import { fetchInitialData, fetchVaultsData } from "./requests";
-import { fetchMulticallData } from "./batcher";
+import { fetchMulticallData } from "./batcher/requests";
 import { fetchTokenPriceData } from "./tokens";
 import { selectors } from "./selectors";
 import { userActions } from "./user";
