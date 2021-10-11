@@ -79,6 +79,19 @@ if (!process.env.IS_SERVER) {
 }
 
 // #region Bad Network
+let activeNetwork = 1;
+export function determineNetwork() {
+  if (provider) {
+    provider.send("net_version", []).then((rawNetworkId) => {
+      activeNetwork = rawNetworkId;
+    });
+
+    return activeNetwork;
+  } else {
+    return null;
+  }
+}
+
 export function badNetworkMiddleware({ dispatch, getState }: any) {
   return (next: any) => (action: any) => {
     const {
@@ -90,11 +103,11 @@ export function badNetworkMiddleware({ dispatch, getState }: any) {
       !badNetwork &&
       provider
     ) {
-      provider.send("net_version", []).then((rawNetworkId) => {
-        if (parseInt(rawNetworkId) !== 1) {
-          dispatch(actions.connectedToBadNetwork());
-        }
-      });
+      determineNetwork();
+
+      if (activeNetwork !== 1) {
+        dispatch(actions.connectedToBadNetwork());
+      }
     }
 
     return next(action);

@@ -73,6 +73,7 @@ export function WalletConnectionDrawer() {
             );
             const networkId = parseInt(await provider.send("net_version", []));
 
+            // This only affects the initially loaded network, not subsequent changes.
             provider.on("network", (newNetwork, oldNetwork) => {
               if (newNetwork?.chainId !== 1) {
                 dispatch(actions.connectedToBadNetwork());
