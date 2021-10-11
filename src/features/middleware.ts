@@ -1,7 +1,8 @@
 import { FEATURE_FLAGS } from "feature-flags";
 import { LOCALSTORAGE_KEY } from "config";
-import { RegisteredCall, debugConsole, deserializeOnChainCall } from "helpers";
+import { RegisteredCall, deserializeOnChainCall } from "helpers/serialize";
 import { actions, disconnectFromProvider, provider } from "./thunks";
+import { debugConsole } from "helpers/logger";
 import {
   fetchIndexPoolTransactions,
   fetchIndexPoolUpdates,
@@ -9,6 +10,7 @@ import {
 import { fetchInitialData, fetchVaultsData } from "./requests";
 import { fetchMulticallData } from "./batcher";
 import { fetchTokenPriceData } from "./tokens";
+import { getActiveNetwork } from "helpers/network";
 import { selectors } from "./selectors";
 import { userActions } from "./user";
 import debounce from "lodash.debounce";
@@ -79,36 +81,24 @@ if (!process.env.IS_SERVER) {
 }
 
 // #region Bad Network
-let activeNetwork = 1;
-export function determineNetwork() {
-  if (provider) {
-    provider.send("net_version", []).then((rawNetworkId) => {
-      activeNetwork = rawNetworkId;
-    });
-
-    return activeNetwork;
-  } else {
-    return null;
-  }
-}
 
 export function badNetworkMiddleware({ dispatch, getState }: any) {
   return (next: any) => (action: any) => {
-    const {
-      settings: { badNetwork },
-    } = getState();
+    // const {
+    //   settings: { badNetwork },
+    // } = getState();
 
-    if (
-      action.type !== actions.userDisconnected.type &&
-      !badNetwork &&
-      provider
-    ) {
-      determineNetwork();
+    // if (
+    //   action.type !== actions.userDisconnected.type &&
+    //   !badNetwork &&
+    //   provider
+    // ) {
+    //   const network = getActiveNetwork(provider);
 
-      if (activeNetwork !== 1) {
-        dispatch(actions.connectedToBadNetwork());
-      }
-    }
+    //   if (network !== 1) {
+    //     dispatch(actions.connectedToBadNetwork());
+    //   }
+    // }
 
     return next(action);
   };

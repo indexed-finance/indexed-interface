@@ -1,6 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { ethers } from "ethers";
-import { getIndexedUrl, sendQuery } from "helpers";
+import { getActiveNetworkInformation, getIndexedUrl, sendQuery } from "helpers";
 import type { NdxStakingPool } from "indexed-types";
 import type { NormalizedStakingPool } from "../staking";
 
@@ -51,24 +50,23 @@ export function normalizeStakingData(
 
 export const fetchStakingData = createAsyncThunk(
   "staking/fetch",
-  async ({
-    provider,
-  }: {
-    provider:
-      | ethers.providers.Web3Provider
-      | ethers.providers.JsonRpcProvider
-      | ethers.providers.InfuraProvider;
-  }) => {
-    const { chainId } = provider.network;
-    const url = getIndexedUrl(chainId);
+  async (provider: any) => {
+    const {
+      id,
+      features: { staking },
+    } = getActiveNetworkInformation(provider);
 
-    try {
-      const staking = await queryStaking(url);
-      const formattedStakingData = normalizeStakingData(staking);
+    if (staking) {
+      const url = getIndexedUrl(id);
 
-      return formattedStakingData;
-    } catch (error) {
-      return [];
+      try {
+        const staking = await queryStaking(url);
+        const formattedStakingData = normalizeStakingData(staking);
+
+        return formattedStakingData;
+      } catch (error) {
+        return [];
+      }
     }
   }
 );

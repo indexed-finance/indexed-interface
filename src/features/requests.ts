@@ -10,7 +10,7 @@ import { NirnSubgraphClient } from "@indexed-finance/subgraph-clients";
 import { convert, dedupe } from "helpers";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ethers } from "ethers";
-import { getIndexedUrl, sendQuery } from "helpers";
+import { getActiveNetworkInformation, getIndexedUrl, sendQuery } from "helpers";
 import type { Category, PoolUnderlyingToken, Token } from "indexed-types";
 import type { NormalizedCategory } from "./categories";
 import type { NormalizedDailySnapshot } from "./dailySnapshots";
@@ -283,9 +283,9 @@ export function normalizeInitialData(categories: Category[]) {
 
 export const fetchInitialData = createAsyncThunk(
   "fetchInitialData",
-  async ({ provider }: OffChainRequest) => {
-    const { chainId } = provider.network;
-    const url = getIndexedUrl(chainId);
+  async (provider: any) => {
+    const { id } = getActiveNetworkInformation(provider);
+    const url = getIndexedUrl(id);
 
     try {
       const initial = await queryInitialData(url);
@@ -299,19 +299,26 @@ export const fetchInitialData = createAsyncThunk(
 
 export const fetchVaultsData = createAsyncThunk(
   "vaults/fetch",
-  async (_: any, { getState }) => {
-    const state = getState();
-    const address = (state as any).user.address;
-    const client = NirnSubgraphClient.forNetwork("mainnet");
+  async (provider: any, { getState }) => {
+    const {
+      name,
+      features: { vaults },
+    } = getActiveNetworkInformation(provider);
 
-    try {
-      const vaults = await client.getAllVaults(address);
+    if (vaults) {
+      const state = getState();
+      const address = (state as any).user.address;
+      const client = NirnSubgraphClient.forNetwork(name);
 
-      return vaults;
-    } catch (error) {
-      console.error({ error });
+      try {
+        const vaults = await client.getAllVaults(address);
 
-      return null;
+        return vaults;
+      } catch (error) {
+        console.error({ error });
+
+        return null;
+      }
     }
   }
 );

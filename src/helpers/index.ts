@@ -12,6 +12,7 @@ export * from './get-random-entries';
 export * from './links';
 export * from './logger';
 export * from './narwhal';
+export * from './network';
 export * from './open-data-pull-request';
 export * from './serialize';
 export * from './sleep';

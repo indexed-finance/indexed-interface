@@ -1,56 +1,78 @@
 import { IndexedDividendsSubgraphClient } from "@indexed-finance/subgraph-clients";
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { getActiveNetworkInformation } from "helpers";
 import type { TimeLockData } from "./slice";
 
 export const fetchTimelocksMetadata = createAsyncThunk(
   "timelocks/metadata/fetch",
-  async () => {
-    const client = IndexedDividendsSubgraphClient.forNetwork("mainnet");
+  async (provider: any) => {
+    const {
+      name,
+      features: { timelocks },
+    } = getActiveNetworkInformation(provider);
 
-    try {
-      const metadata = await client.getData();
+    if (timelocks) {
+      const client = IndexedDividendsSubgraphClient.forNetwork(name);
 
-      return metadata;
-    } catch (error) {
-      console.error({ error });
+      try {
+        const metadata = await client.getData();
 
-      return null;
+        return metadata;
+      } catch (error) {
+        console.error({ error });
+
+        return null;
+      }
     }
   }
 );
 
 export const fetchTimelockData = createAsyncThunk(
   "timelocks/fetch",
-  async (timelockId: string) => {
-    const client = IndexedDividendsSubgraphClient.forNetwork("mainnet");
+  async ({ provider, timelockId }: any) => {
+    const {
+      name,
+      features: { timelocks },
+    } = getActiveNetworkInformation(provider);
 
-    try {
-      const timelock = await client.getLock(timelockId);
+    if (timelocks) {
+      const client = IndexedDividendsSubgraphClient.forNetwork(name);
 
-      return timelock;
-    } catch (error) {
-      console.error({ error });
+      try {
+        const timelock = await client.getLock(timelockId);
 
-      return null;
+        return timelock;
+      } catch (error) {
+        console.error({ error });
+
+        return null;
+      }
     }
   }
 );
 
 export const fetchUserTimelocks = createAsyncThunk(
   "timelocks/user/fetch",
-  async (userId: string) => {
-    const client = IndexedDividendsSubgraphClient.forNetwork("mainnet");
+  async ({ provider, userId }: any) => {
+    const {
+      name,
+      features: { timelocks },
+    } = getActiveNetworkInformation(provider);
 
-    try {
-      const timelocks = (await (client.getLocksByOwner(
-        userId
-      ) as unknown)) as TimeLockData[];
+    if (timelocks) {
+      const client = IndexedDividendsSubgraphClient.forNetwork(name);
 
-      return timelocks;
-    } catch (error) {
-      console.error({ error });
+      try {
+        const timelocks = (await (client.getLocksByOwner(
+          userId
+        ) as unknown)) as TimeLockData[];
 
-      return [];
+        return timelocks;
+      } catch (error) {
+        console.error({ error });
+
+        return [];
+      }
     }
   }
 );

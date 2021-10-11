@@ -90,23 +90,11 @@ export const thunks = {
 
       await provider.ready;
 
-      dispatch(
-        fetchInitialData({
-          provider,
-        })
-      );
-      dispatch(
-        fetchStakingData({
-          provider,
-        })
-      );
-      dispatch(
-        fetchNewStakingData({
-          provider,
-        })
-      );
-      dispatch(fetchMasterChefData({ provider }));
-      dispatch(fetchVaultsData({ provider }));
+      dispatch(fetchInitialData(provider));
+      dispatch(fetchStakingData(provider));
+      dispatch(fetchNewStakingData(provider));
+      dispatch(fetchMasterChefData(provider));
+      dispatch(fetchVaultsData(provider));
 
       if (selectedAddress) {
         dispatch(actions.userAddressSelected(selectedAddress));
