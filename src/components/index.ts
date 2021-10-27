@@ -8,3 +8,4 @@ export * from './drawers';
 export * from './interactions';
 export * from './portfolio';
 export * from './routes';
+export * from './surreal';

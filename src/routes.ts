@@ -19,13 +19,16 @@ const SushiswapStakeForm = lazy(
 );
 const IndexPools = lazy(() => import("./components/routes/IndexPools"));
 const IndexPool = lazy(() => import("./components/routes/IndexPool"));
-const Vaults = lazy(() => import("./components/routes/Vaults"));
+// const Vaults = lazy(() => import("./components/routes/Vaults"));
 const Vault = lazy(() => import("./components/routes/Vault"));
 const Timelocks = lazy(() => import("./components/routes/Timelocks"));
 const CreateTimelock = lazy(() => import("./components/routes/CreateTimelock"));
 const TimelockWithdrawal = lazy(
   () => import("./components/routes/TimelockWithdrawal")
 );
+
+// Surreal Redesign
+const SurrealVaults = lazy(() => import("./components/surreal/routes/Vaults"));
 
 export const routes: RouteWithBreadcrumbs[] = [
   {
@@ -89,7 +92,7 @@ export const routes: RouteWithBreadcrumbs[] = [
   {
     path: "/vaults",
     exact: true,
-    component: Vaults,
+    component: SurrealVaults,
   },
   {
     path: "/vaults/:slug",
