@@ -20,7 +20,7 @@ export function SurrealHeading({
 }: Props) {
   return (
     <>
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ display: "flex", alignItems: "flex-start" }}>
         {image && (
           <img src={image} alt="Heading" style={{ marginRight: "1rem" }} />
         )}
@@ -48,7 +48,7 @@ export function SurrealHeading({
         style={{
           marginTop: "1.5rem",
           height: 3,
-          background: `linear-gradient(101deg, ${COLORS.Cyan} 33%, rgba(0, 0, 0, 0) 100%)`,
+          background: `linear-gradient(101deg, ${COLORS.Cyan} 18%, rgba(0, 0, 0, 0) 100%)`,
         }}
       ></div>
     </>
