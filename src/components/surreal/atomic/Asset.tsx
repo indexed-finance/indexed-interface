@@ -1,3 +1,4 @@
+// Atom
 import { PLACEHOLDER_TOKEN_IMAGE } from "config";
 import { Typography } from "antd";
 import { useMemo } from "react";

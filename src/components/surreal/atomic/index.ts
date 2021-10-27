@@ -4,3 +4,4 @@
 export * from './Asset';
 export * from './Heading';
 export * from './Panel';
+export * from './VaultRow';
