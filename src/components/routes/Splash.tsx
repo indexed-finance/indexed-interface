@@ -1,4 +1,4 @@
-import { Alert, Button, Divider, Statistic, Typography } from "antd";
+import { Alert, Button, Divider, Space, Statistic, Typography } from "antd";
 import {
   IndexPoolWidgetGroup,
   Logo,
@@ -65,19 +65,64 @@ export default function Splash() {
           </Divider>
         </div>
       </div>
+
       <Alert
         style={{ textAlign: "center" }}
-        type="info"
+        type="warning"
         message={
-          <>
-            NEW: Enter a timelock with your NDX governance tokens and receive
-            dNDX for a proportional claim on protocol revenue.{" "}
-            <Button type="primary" onClick={() => history.push("/timelocks")}>
-              Try it
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span>
+              Remaining assets from the{" "}
+              <a
+                href="https://etherscan.io/token/0xfa6de2697d59e88ed7fc4dfe5a33dac43565ea41"
+                target="_blank"
+                rel="noreferrer"
+              >
+                DEFI5
+              </a>{" "}
+              and{" "}
+              <a
+                href="https://etherscan.io/token/0x17ac188e09a7890a1844e5e65471fe8b0ccfadf3"
+                target="_blank"
+                rel="noreferrer"
+              >
+                CC10
+              </a>{" "}
+              <a
+                href="https://discord.com/channels/@me/991236780676349963/994954651835314177"
+                style={{ color: "#FF160C" }}
+              >
+                exploits
+              </a>{" "}
+              are available to redeem.
+            </span>
+
+            <span>
+              If you are a tokenholder of either asset, they can be redeemed for
+              the underlying assets.
+            </span>
+
+            <Button
+              type="primary"
+              danger
+              style={{
+                padding: "5px!important",
+                alignSelf: "center",
+                marginTop: "10px",
+              }}
+            >
+              <a
+                href="http://drain-reversal.indexed.finance/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Redemption App
+              </a>
             </Button>
-          </>
+          </div>
         }
       />
+
       <Divider />
       <SplashSection
         banner={require("images/indexpools_banner.png").default}
@@ -94,8 +139,8 @@ export default function Splash() {
       >
         {poolsExist && <IndexPoolWidgetGroup />}
       </SplashSection>
-      {vaultsCount > 0
-        ? <>
+      {vaultsCount > 0 ? (
+        <>
           <Divider />
           <SplashSection
             banner={require("images/vaults_banner.png").default}
@@ -113,9 +158,10 @@ export default function Splash() {
             <VaultGroup withTitle={true} />
           </SplashSection>
         </>
-        : <> </>
-      }
-      
+      ) : (
+        <> </>
+      )}
+
       <Divider />
       <SplashSection
         banner={require("images/staking_banner.png").default}
