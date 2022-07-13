@@ -17,10 +17,9 @@ import {
 } from "components/atomic/molecules";
 import { Layout, Menu, Space } from "antd";
 import { Link } from "react-router-dom";
-import { ReactNode, useEffect, useState } from "react";
-import { RiSafe2Line } from "react-icons/ri";
 import { selectors } from "features";
 import { useBreakpoints, useTranslator } from "hooks";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import EthIcon from "images/eth.png";
 import Icon from "@ant-design/icons";
@@ -40,14 +39,6 @@ export function LayoutHeader() {
     <>
       {!xl && (
         <Menu mode="vertical" style={{ width: "100%" }}>
-          <Menu.Item key="vaults">
-            <Link to="/vaults">
-              <Space size="small">
-                <RiSafe2Line style={{ position: "relative", top: 2 }} /> Vaults
-              </Space>
-            </Link>
-          </Menu.Item>
-
           <Menu.Item key="index-pools">
             <Link to="/index-pools">
               <Space size="small">
@@ -57,22 +48,6 @@ export function LayoutHeader() {
             </Link>
           </Menu.Item>
 
-          <Menu.Item key="staking">
-            <Link to="/staking">
-              <Space>
-                <RiSafe2Line style={{ position: "relative", top: 2 }} /> Staking
-              </Space>
-            </Link>
-          </Menu.Item>
-
-          <Menu.Item key="portfolio">
-            <Link to="/portfolio">
-              <Space size="small">
-                <AiOutlineUser style={{ position: "relative", top: 2 }} />
-                {tx("PORTFOLIO")}
-              </Space>
-            </Link>
-          </Menu.Item>
           <Menu.Item>
             <ExternalLink
               to="https://legacy.indexed.finance/governance"
@@ -95,10 +70,15 @@ export function LayoutHeader() {
             className="make_blocky"
           >
             <Menu.Item key="eth-network">
-              <Icon src={EthIcon} style={{ position: "relative", top: 2 }} />{" "} Ethereum
+              <Icon src={EthIcon} style={{ position: "relative", top: 2 }} />{" "}
+              Ethereum
             </Menu.Item>
             <Menu.Item key="matic-network">
-              <Icon src={MaticIcon} style={{ position: "relative", top: 2, maxHeight: '20px' }} />{" "} Polygon
+              <Icon
+                src={MaticIcon}
+                style={{ position: "relative", top: 2, maxHeight: "20px" }}
+              />{" "}
+              Polygon
             </Menu.Item>
           </Menu.SubMenu>
 
